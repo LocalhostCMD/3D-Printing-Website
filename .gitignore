@@ -1,0 +1,8 @@
+node_modules/
+.env
+uploads/
+data/analytics.json
+data/contact.json
+data/logs.json
+data/*-instance.lock
+data/tmp-uploads/

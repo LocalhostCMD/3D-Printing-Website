@@ -1,0 +1,2714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin — Store v2</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #09111d; --surface: #111a2b; --surface2: #172238;
+      --gold: #63d2c1; --gold-light: #8be6d9;
+      --text: #edf4ff; --muted: #8ea0ba; --border: #23334f;
+      --danger: #ef7b7b; --success: #6dd4a6;
+    }
+    body {
+      background:
+        radial-gradient(circle at top left, rgba(99,210,193,0.16), transparent 34%),
+        radial-gradient(circle at top right, rgba(103,129,255,0.12), transparent 30%),
+        linear-gradient(180deg, #0b1422 0%, #09111d 42%, #070d16 100%);
+      color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 0 2rem; display: flex; align-items: center; justify-content: space-between;
+      height: 68px; position: sticky; top: 0; z-index: 100;
+    }
+    .logo { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--gold); }
+    .header-right { display: flex; gap: 1rem; align-items: center; }
+    .btn-sm {
+      padding: 0.45rem 1rem; border-radius: 7px; font-size: 0.82rem;
+      font-family: 'DM Sans', sans-serif; cursor: pointer; text-decoration: none;
+      border: 1px solid var(--border); color: var(--muted); background: transparent; transition: all 0.2s;
+    }
+    .btn-sm:hover { color: var(--text); border-color: var(--gold); }
+
+    /* ── Tab nav ── */
+    .tab-nav {
+      display: flex; gap: 0; background: rgba(10,18,31,0.94); border-bottom: 1px solid var(--border);
+      padding: 0 2rem; overflow-x: auto; position: sticky; top: 68px; z-index: 90;
+      backdrop-filter: blur(18px);
+    }
+    .tab-btn {
+      padding: 0.9rem 1.4rem; font-size: 0.85rem; letter-spacing: 0.05em;
+      background: none; border: none; color: var(--muted); cursor: pointer;
+      font-family: 'DM Sans', sans-serif; border-bottom: 2px solid transparent;
+      transition: color 0.2s, border-color 0.2s; white-space: nowrap;
+    }
+    .tab-btn:hover  { color: var(--text); }
+    .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+    .product-menu { display: flex; gap: 0.75rem; flex-wrap: wrap; margin: 1rem 0 1.25rem; }
+    .product-menu-btn {
+      padding: 0.7rem 1rem; border-radius: 999px; border: 1px solid var(--border);
+      background: transparent; color: var(--muted); cursor: pointer; font-family: 'DM Sans', sans-serif;
+      transition: all 0.2s; font-size: 0.85rem;
+    }
+    .product-menu-btn:hover { color: var(--text); border-color: var(--muted); }
+    .product-menu-btn.active { color: var(--gold); border-color: rgba(99,210,193,0.45); background: rgba(99,210,193,0.08); }
+
+    /* ── Tab pages ── */
+    .tab-page { display: none; }
+    .tab-page.active { display: block; }
+
+    .container { max-width: 1140px; margin: 0 auto; padding: 2rem; }
+    .hero-shell { padding-top: 1.4rem; padding-bottom: 0; }
+    .dashboard-hero {
+      background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(99,210,193,0.08));
+      border: 1px solid rgba(99,210,193,0.16);
+      border-radius: 22px;
+      padding: 1.1rem 1.25rem;
+      display: flex; align-items: center; justify-content: space-between; gap: 1.25rem;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.28);
+    }
+    .hero-kicker { color: var(--gold); text-transform: uppercase; letter-spacing: 0.18em; font-size: 0.68rem; margin-bottom: 0.35rem; }
+    .dashboard-hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(1.7rem, 3vw, 2.35rem); line-height: 1.05; color: #f4f8ff; margin-bottom: 0.35rem; }
+    .dashboard-hero p { color: var(--muted); max-width: 54ch; font-size: 0.92rem; }
+    .hero-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; align-self: stretch; align-items: center; }
+    .hero-actions .btn-primary, .hero-actions .btn-secondary { min-width: 148px; text-align: center; }
+    .page-title { font-family: 'Playfair Display', serif; font-size: 1.8rem; color: var(--gold-light); margin-bottom: 0.35rem; }
+    .page-sub   { color: var(--muted); font-size: 0.93rem; margin-bottom: 1.5rem; }
+
+    /* ── Cards ── */
+    .card { background: rgba(17,26,43,0.9); border: 1px solid rgba(35,51,79,0.95); border-radius: 18px; padding: 1.9rem; margin-bottom: 1.6rem; box-shadow: 0 12px 30px rgba(0,0,0,0.22); }
+    .card h2 { font-family: 'Playfair Display', serif; font-size: 1.2rem; margin-bottom: 1.5rem; color: var(--gold); display: flex; align-items: center; gap: 0.5rem; }
+
+    /* ── Form elements ── */
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+    @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+    .field { margin-bottom: 1rem; }
+    label { display: block; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.4rem; }
+    input[type=text], input[type=number], input[type=email], input[type=tel], textarea, select {
+      width: 100%; background: #0c1625; border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); padding: 0.7rem 0.9rem; font-size: 0.92rem;
+      font-family: 'DM Sans', sans-serif; outline: none; transition: border-color 0.2s;
+    }
+    input:focus, textarea:focus { border-color: var(--gold); }
+    textarea { resize: vertical; min-height: 90px; }
+
+    /* ── Upload zone ── */
+    .upload-zone {
+      border: 2px dashed var(--border); border-radius: 10px; padding: 1.5rem 2rem;
+      text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; position: relative;
+    }
+    .upload-zone:hover { border-color: var(--gold); background: rgba(99,210,193,0.05); }
+    .upload-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+    .upload-zone-icon { font-size: 1.8rem; margin-bottom: 0.4rem; }
+    .upload-zone p { color: var(--muted); font-size: 0.88rem; }
+    .upload-zone span { color: var(--gold); }
+
+    .img-source-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.5rem; }
+    @media (max-width: 560px) { .img-source-row { grid-template-columns: 1fr; } }
+
+    .library-btn-zone {
+      border: 2px dashed var(--border); border-radius: 10px; padding: 1.5rem 2rem;
+      text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.4rem;
+    }
+    .library-btn-zone:hover { border-color: var(--gold); background: rgba(99,210,193,0.05); }
+
+    .image-preview-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 0.8rem; }
+    .preview-thumb { position: relative; width: 80px; height: 80px; }
+    .preview-thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 7px; border: 1px solid var(--border); }
+    .preview-thumb .remove-btn {
+      position: absolute; top: -6px; right: -6px; background: var(--danger); color: white;
+      border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 0.7rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ── Buttons ── */
+    .btn-primary {
+      background: linear-gradient(135deg, var(--gold), var(--gold-light)); color: #0f0e0c; border: none; border-radius: 12px;
+      padding: 0.8rem 1.1rem; font-size: 0.92rem; font-weight: 700;
+      font-family: 'DM Sans', sans-serif; cursor: pointer; transition: background 0.2s;
+    }
+    .btn-primary:hover { filter: brightness(1.03); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-danger {
+      background: transparent; color: var(--danger); border: 1px solid var(--danger);
+      border-radius: 7px; padding: 0.4rem 0.9rem; font-size: 0.8rem;
+      font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-danger:hover { background: var(--danger); color: white; }
+    .btn-edit {
+      background: transparent; color: var(--gold); border: 1px solid var(--gold);
+      border-radius: 7px; padding: 0.4rem 0.9rem; font-size: 0.8rem;
+      font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-edit:hover { background: var(--gold); color: #0f0e0c; }
+    .btn-secondary {
+      background: rgba(255,255,255,0.02); color: var(--muted); border: 1px solid var(--border);
+      border-radius: 12px; padding: 0.6rem 1rem; font-size: 0.86rem;
+      font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-secondary:hover { color: var(--text); border-color: var(--muted); }
+
+    /* ── Products list ── */
+    .products-list { display: flex; flex-direction: column; gap: 1rem; }
+    .product-row {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      display: flex; align-items: center; gap: 1rem; padding: 1rem 1.2rem;
+      transition: border-color 0.2s; cursor: grab; user-select: none;
+    }
+    .product-row:active { cursor: grabbing; }
+    .product-row:hover  { border-color: #3e3c38; }
+    .product-row.dragging { opacity: 0.4; }
+    .product-row.drag-over { border-color: var(--gold); background: rgba(201,168,76,0.04); }
+    .drag-handle-row { color: var(--muted); font-size: 1rem; flex-shrink: 0; cursor: grab; }
+    .product-thumb {
+      width: 70px; height: 70px; border-radius: 8px; background: var(--surface2);
+      flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; color: var(--muted); overflow: hidden;
+    }
+    .product-thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+    .product-info { flex: 1; min-width: 0; }
+    .product-info strong { display: block; font-size: 1rem; margin-bottom: 0.2rem; }
+    .product-info span { font-size: 0.82rem; color: var(--muted); }
+    .product-badges { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.45rem; }
+    .product-badge {
+      display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.3rem 0.55rem;
+      border-radius: 999px; background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.18);
+      color: var(--gold-light); font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .product-price { font-size: 1rem; color: var(--gold); font-weight: 500; margin-right: 0.5rem; white-space: nowrap; }
+    .product-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+    .reorder-hint { font-size: 0.75rem; color: var(--muted); margin-bottom: 0.8rem; }
+    .reorder-hint span { color: var(--gold); }
+
+    /* ── Sortable images inside edit modal ── */
+    .sortable-images {
+      display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 0.6rem;
+      min-height: 90px; padding: 10px;
+      border: 2px dashed transparent; border-radius: 10px; transition: border-color 0.2s, background 0.2s;
+    }
+    .sortable-images.drag-over { border-color: var(--gold); background: rgba(201,168,76,0.05); }
+    .sort-img-wrap {
+      position: relative; width: 86px; height: 86px; cursor: grab; user-select: none;
+      transition: transform 0.15s, opacity 0.15s, box-shadow 0.15s;
+    }
+    .sort-img-wrap:active { cursor: grabbing; }
+    .sort-img-wrap.dragging  { opacity: 0.35; transform: scale(0.95); }
+    .sort-img-wrap.drag-target { transform: scale(1.06); box-shadow: 0 0 0 2px var(--gold); border-radius: 9px; }
+    .sort-img-wrap img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); pointer-events: none; display: block; }
+    .sort-img-wrap.first-img::after {
+      content: 'Cover'; position: absolute; bottom: 0; left: 0; right: 0;
+      background: rgba(201,168,76,0.88); color: #0f0e0c; font-size: 0.6rem; font-weight: 700;
+      letter-spacing: 0.06em; text-align: center; padding: 2px 0;
+      border-radius: 0 0 7px 7px; pointer-events: none;
+    }
+    .sort-img-wrap .remove-existing {
+      position: absolute; top: -6px; right: -6px; background: var(--danger); color: white;
+      border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 0.7rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 2;
+    }
+    .sort-img-wrap .drag-handle {
+      position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
+      background: rgba(0,0,0,0.55); border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.6rem; color: rgba(255,255,255,0.7); pointer-events: none;
+    }
+    .sort-hint { font-size: 0.75rem; color: var(--muted); margin-bottom: 0.5rem; }
+    .sort-hint span { color: var(--gold); }
+
+    /* ── Analytics ── */
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .stat-box {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 1.4rem 1.6rem;
+    }
+    .stat-box .stat-label { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
+    .stat-box .stat-value { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--gold-light); }
+    .stat-box .stat-sub   { font-size: 0.75rem; color: var(--muted); margin-top: 0.2rem; }
+
+    .analytics-table { width: 100%; border-collapse: collapse; }
+    .analytics-table th {
+      text-align: left; font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--muted); padding: 0 0.8rem 0.8rem; border-bottom: 1px solid var(--border);
+    }
+    .analytics-table td { padding: 0.9rem 0.8rem; border-bottom: 1px solid #1e1d1b; vertical-align: middle; }
+    .analytics-table tr:last-child td { border-bottom: none; }
+    .analytics-table tr:hover td { background: var(--surface2); }
+    .at-img { width: 44px; height: 44px; border-radius: 6px; object-fit: cover; background: var(--surface2); flex-shrink: 0; }
+    .at-name { font-size: 0.92rem; color: var(--text); }
+    .at-price { font-size: 0.85rem; color: var(--gold); }
+    .at-views { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--gold-light); }
+    .at-bar-wrap { height: 6px; background: var(--border); border-radius: 3px; min-width: 60px; }
+    .at-bar { height: 6px; background: var(--gold); border-radius: 3px; transition: width 0.5s; }
+    .at-date { font-size: 0.75rem; color: var(--muted); }
+    .analytics-empty { text-align: center; padding: 3rem; color: var(--muted); }
+    /* Visitor log */
+    .vl-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .vl-table th { padding: 0.6rem 0.7rem; text-align: left; color: var(--muted); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
+    .vl-table td { padding: 0.55rem 0.7rem; border-bottom: 1px solid #1a1a17; vertical-align: middle; }
+    .vl-table tr:last-child td { border-bottom: none; }
+    .vl-table tr:hover td { background: var(--surface2); }
+    .vl-you { display: inline-block; background: var(--gold); color: #000; font-size: 0.65rem; font-weight: 700; padding: 1px 5px; border-radius: 3px; margin-left: 5px; vertical-align: middle; }
+    .vl-ip { font-family: monospace; color: var(--text); }
+    .vl-muted { color: var(--muted); }
+    .log-table { width: 100%; border-collapse: collapse; }
+    .log-table th { padding: 0.6rem 0.7rem; text-align: left; color: var(--muted); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
+    .log-table td { padding: 0.8rem 0.7rem; border-bottom: 1px solid #1a1a17; vertical-align: top; }
+    .log-table tr:last-child td { border-bottom: none; }
+    .log-table tr:hover td { background: var(--surface2); }
+    .log-level { display: inline-flex; align-items: center; justify-content: center; min-width: 72px; padding: 0.25rem 0.5rem; border-radius: 999px; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; border: 1px solid var(--border); }
+    .log-level.error { color: var(--danger); background: rgba(239,123,123,0.08); border-color: rgba(239,123,123,0.28); }
+    .log-level.warn { color: #f0c46f; background: rgba(240,196,111,0.08); border-color: rgba(240,196,111,0.26); }
+    .log-level.fatal { color: #ff8f8f; background: rgba(255,143,143,0.12); border-color: rgba(255,143,143,0.34); }
+    .log-level.info { color: var(--gold-light); background: rgba(99,210,193,0.08); border-color: rgba(99,210,193,0.26); }
+    .log-category { color: var(--gold-light); font-size: 0.8rem; letter-spacing: 0.04em; text-transform: uppercase; }
+    .log-message { color: var(--text); font-size: 0.9rem; line-height: 1.5; }
+    .log-details { white-space: pre-wrap; word-break: break-word; color: var(--muted); font-size: 0.76rem; line-height: 1.5; margin-top: 0.35rem; max-width: 520px; }
+    .reset-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+    .reset-row .info { font-size: 0.85rem; color: var(--muted); }
+
+    /* ── Contact form ── */
+    .contact-admin-form .field { margin-bottom: 1.2rem; }
+    .contact-hint { font-size: 0.78rem; color: var(--muted); margin-top: 0.3rem; }
+
+    /* ── Library tab ── */
+    .lib-toolbar { display: flex; gap: 0.8rem; align-items: center; margin-bottom: 1.2rem; flex-wrap: wrap; }
+    .lib-search {
+      flex: 1; min-width: 180px; background: #0f0e0c; border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); padding: 0.55rem 0.9rem;
+      font-size: 0.88rem; font-family: 'DM Sans', sans-serif; outline: none; transition: border-color 0.2s;
+    }
+    .lib-search:focus { border-color: var(--gold); }
+    .lib-count { font-size: 0.82rem; color: var(--muted); white-space: nowrap; }
+    .lib-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 10px; max-height: 500px; overflow-y: auto;
+    }
+    .lib-item { position: relative; aspect-ratio: 1/1; border-radius: 8px; overflow: hidden; cursor: pointer; border: 2px solid transparent; transition: border-color 0.2s; touch-action: manipulation; background: var(--surface2); }
+    .lib-item > img, .lib-item > video { width: 100%; height: 100%; object-fit: cover; pointer-events: none; display: block; }
+    .lib-item:hover { border-color: var(--muted); }
+    .lib-item.selected { border-color: var(--gold); }
+    .lib-check { position: absolute; top: 5px; right: 5px; background: var(--gold); color: #0f0e0c; border-radius: 50%; width: 20px; height: 20px; display: none; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; z-index: 2; }
+    .lib-item.selected .lib-check { display: flex; }
+    .lib-order { position: absolute; top: 5px; left: 5px; background: rgba(0,0,0,0.7); color: var(--gold); border-radius: 4px; padding: 1px 5px; font-size: 0.7rem; font-weight: 700; z-index: 2; }
+    .lib-del { position: absolute; bottom: 5px; right: 5px; background: rgba(224,92,92,0.85); color: white; border: none; border-radius: 4px; width: 22px; height: 22px; font-size: 0.7rem; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; z-index: 2; }
+    .lib-item:hover .lib-del { opacity: 1; }
+    .lib-filename { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); color: rgba(255,255,255,0.7); font-size: 0.6rem; padding: 2px 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; z-index: 2; }
+    .lib-empty { text-align: center; padding: 3rem; color: var(--muted); grid-column: 1/-1; }
+
+    @media (max-width: 720px) {
+      .lib-grid { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
+      .modal { padding: 1.25rem; max-height: 94vh; }
+      .lib-modal { max-width: 96vw; }
+      .tab-nav, header { padding-left: 1rem; padding-right: 1rem; }
+      .container { padding: 1rem; }
+      .img-source-row { grid-template-columns: 1fr; }
+      .hero-actions { width: 100%; }
+      .hero-actions .btn-primary, .hero-actions .btn-secondary { min-width: 0; flex: 1 1 0; }
+    }
+
+    /* ── Modals ── */
+    .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 200; align-items: center; justify-content: center; padding: 1rem; }
+    .modal-bg.open { display: flex; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+      max-width: 620px; width: 100%; max-height: 90vh; overflow-y: auto;
+      padding: 2rem; position: relative; animation: fadeUp 0.22s ease;
+    }
+    .lib-modal { max-width: 860px; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+    .modal-close {
+      position: absolute; top: 1rem; right: 1rem; background: var(--surface2);
+      border: 1px solid var(--border); color: var(--text); width: 34px; height: 34px;
+      border-radius: 50%; font-size: 1rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; transition: background 0.2s;
+    }
+    .modal-close:hover { background: #3a3830; }
+    .modal h2 { font-family: 'Playfair Display', serif; color: var(--gold); margin-bottom: 1.5rem; font-size: 1.2rem; }
+    .lib-confirm {
+      background: var(--gold); color: #0f0e0c; border: none; border-radius: 7px;
+      padding: 0.5rem 1.2rem; font-size: 0.85rem; font-weight: 600;
+      font-family: 'DM Sans', sans-serif; cursor: pointer; transition: background 0.2s;
+    }
+    .lib-confirm:hover { background: var(--gold-light); }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 1.4rem; right: 1.4rem; background: rgba(26,25,22,0.96);
+      border: 1px solid var(--gold); color: var(--text); padding: 0.95rem 1.2rem;
+      border-radius: 14px; font-size: 0.9rem; z-index: 999;
+      opacity: 0; transform: translateY(12px); transition: all 0.3s; pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    .upload-progress {
+      position: fixed;
+      right: 1.4rem;
+      bottom: 5rem;
+      width: min(360px, calc(100vw - 2rem));
+      background: rgba(17,26,43,0.96);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 0.75rem 0.9rem;
+      z-index: 998;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.22s ease, transform 0.22s ease;
+      pointer-events: none;
+    }
+    .upload-progress.show { opacity: 1; transform: translateY(0); }
+    .upload-progress-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.45rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .upload-progress-track {
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: #0b1422;
+      overflow: hidden;
+      border: 1px solid rgba(99,210,193,0.2);
+    }
+    .upload-progress-bar {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold), var(--gold-light));
+      transition: width 0.1s linear;
+    }
+
+    .empty-state { text-align: center; padding: 3rem; color: var(--muted); }
+    .empty-state span { font-size: 2.5rem; display: block; margin-bottom: 0.8rem; }
+
+    /* ── Edit buttons on preview thumbs ── */
+    .preview-thumb .edit-btn {
+      position: absolute; bottom: -6px; left: -6px; background: var(--gold); color: #0f0e0c;
+      border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 0.6rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 2;
+    }
+    .preview-thumb .edit-btn:hover { background: var(--gold-light); }
+    .sort-img-wrap .crop-btn {
+      position: absolute; bottom: -6px; left: -6px; background: var(--gold); color: #0f0e0c;
+      border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 0.6rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 2;
+    }
+    .sort-img-wrap .crop-btn:hover { background: var(--gold-light); }
+
+    /* ── Crop Modal ── */
+    #cropModal { z-index: 400; }
+    .crop-modal-inner {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+      max-width: 700px; width: 100%; max-height: 92vh; overflow-y: auto;
+      padding: 2rem; position: relative; animation: fadeUp 0.22s ease;
+      display: flex; flex-direction: column; gap: 1.2rem;
+    }
+    .crop-stage {
+      position: relative; background: #000; border-radius: 10px;
+      overflow: hidden; touch-action: none; cursor: crosshair;
+      width: 100%; aspect-ratio: 4/3; user-select: none;
+    }
+    #cropCanvas { display: block; width: 100%; height: 100%; }
+    .crop-selection {
+      position: absolute; border: 2px solid var(--gold);
+      box-shadow: 0 0 0 9999px rgba(0,0,0,0.52);
+      pointer-events: none;
+    }
+    .crop-handle {
+      position: absolute; width: 12px; height: 12px;
+      background: var(--gold); border-radius: 2px;
+      pointer-events: all; z-index: 5;
+    }
+    .crop-handle.nw { top: -6px; left: -6px; cursor: nw-resize; }
+    .crop-handle.ne { top: -6px; right: -6px; cursor: ne-resize; }
+    .crop-handle.sw { bottom: -6px; left: -6px; cursor: sw-resize; }
+    .crop-handle.se { bottom: -6px; right: -6px; cursor: se-resize; }
+    .crop-controls {
+      display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center;
+    }
+    .crop-controls .ctrl-group { display: flex; gap: 0.4rem; align-items: center; }
+    .crop-controls label { font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin: 0; }
+    .crop-btn-ctrl {
+      background: var(--surface2); color: var(--text); border: 1px solid var(--border);
+      border-radius: 7px; padding: 0.4rem 0.8rem; font-size: 0.82rem;
+      font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all 0.15s;
+      display: flex; align-items: center; gap: 0.3rem;
+    }
+    .crop-btn-ctrl:hover { border-color: var(--gold); color: var(--gold); }
+    .crop-btn-ctrl.active { border-color: var(--gold); background: rgba(201,168,76,0.15); color: var(--gold); }
+    .crop-aspect-row { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .aspect-chip {
+      background: var(--surface2); color: var(--muted); border: 1px solid var(--border);
+      border-radius: 20px; padding: 0.25rem 0.7rem; font-size: 0.75rem;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .aspect-chip:hover, .aspect-chip.active { border-color: var(--gold); color: var(--gold); background: rgba(201,168,76,0.1); }
+    .crop-actions { display: flex; gap: 0.8rem; justify-content: flex-end; flex-wrap: wrap; }
+    .crop-preview-strip {
+      display: flex; gap: 6px; flex-wrap: wrap;
+    }
+    .crop-preview-mini {
+      width: 56px; height: 56px; border-radius: 6px; object-fit: cover;
+      border: 1px solid var(--border); opacity: 0.7; transition: opacity 0.2s;
+    }
+    .crop-preview-mini.active-slot { border-color: var(--gold); opacity: 1; }
+
+    @media (max-width: 900px) {
+      header { flex-wrap: wrap; padding: 0.75rem 1rem; height: auto; justify-content: center; gap: 0.75rem; }
+      .header-right { width: 100%; justify-content: center; flex-wrap: wrap; }
+      .tab-nav { padding: 0 1rem; top: auto; position: sticky; }
+      .container { padding: 1rem; }
+      .card { padding: 1.25rem; }
+      .dashboard-hero { flex-direction: column; align-items: flex-start; }
+      .hero-actions { width: 100%; }
+      .hero-actions .btn-primary, .hero-actions .btn-secondary { flex: 1 1 180px; }
+      .stats-row, .form-row, .img-source-row { grid-template-columns: 1fr; }
+      .product-row { flex-direction: column; align-items: stretch; }
+      .analytics-table { display: block; overflow-x: auto; width: 100%; }
+      .analytics-table th, .analytics-table td { white-space: nowrap; }
+      .upload-zone, .library-btn-zone { padding: 1rem; }
+      .modal { max-width: 100%; border-radius: 12px; }
+      .btn-sm { width: auto; }
+    }
+
+    @media (max-width: 640px) {
+      .tab-btn { padding: 0.8rem 1rem; font-size: 0.8rem; }
+      .product-actions {
+        width: 100%;
+        justify-content: stretch;
+      }
+      .product-actions .btn-edit,
+      .product-actions .btn-danger {
+        flex: 1 1 0;
+        min-height: 40px;
+      }
+      .product-price {
+        margin-right: 0;
+        margin-bottom: 0.4rem;
+      }
+      .card {
+        padding: 1rem;
+        border-radius: 14px;
+      }
+      .modal {
+        padding: 1rem;
+      }
+      .reset-row {
+        align-items: flex-start;
+      }
+      .lib-toolbar {
+        gap: 0.6rem;
+      }
+      .lib-toolbar .btn-secondary,
+      .lib-confirm {
+        width: 100%;
+      }
+      .lib-search {
+        min-width: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">✦ Admin v2</div>
+  <div class="header-right">
+    <a class="btn-sm" href="/" target="_blank">View Store ↗</a>
+    <a class="btn-sm" href="/admin/logout">Sign Out</a>
+  </div>
+</header>
+
+<!-- ── Tab Nav ── -->
+<nav class="tab-nav">
+  <button class="tab-btn active" onclick="showTab('products', event)">📦 Products</button>
+  <button class="tab-btn"        onclick="showTab('materials', event)">🧩 Materials</button>
+  <button class="tab-btn"        onclick="showTab('analytics', event)">📊 Analytics</button>
+  <button class="tab-btn"        onclick="showTab('logs', event)">🪵 Logs</button>
+  <button class="tab-btn"        onclick="showTab('settings', event)">⚙️ Settings</button>
+  <button class="tab-btn"        onclick="showTab('contact', event)">📬 Contact</button>
+  <button class="tab-btn"        onclick="showTab('library')">🗂️ Image Library</button>
+</nav>
+
+<div class="container hero-shell">
+  <section class="dashboard-hero" aria-label="Admin dashboard introduction">
+    <div>
+      <div class="hero-kicker">Store control</div>
+      <h1>Run the store from one place.</h1>
+      <p>Products, media, analytics, and settings stay in one tidy workflow.</p>
+    </div>
+    <div class="hero-actions">
+      <button class="btn-primary" onclick="showTab('products', event)">Add Product</button>
+      <button class="btn-secondary" onclick="showTab('analytics', event)">View Analytics</button>
+    </div>
+  </section>
+</div>
+
+<!-- ══════════════════ PRODUCTS TAB ══════════════════ -->
+<div class="tab-page active" id="tab-products">
+  <div class="container">
+    <div class="page-title">Products</div>
+    <div class="page-sub">Add, edit, and reorder your store's products.</div>
+
+    <!-- Add Product -->
+    <div class="card">
+      <h2>➕ Add New Product</h2>
+      <div class="form-row">
+        <div class="field">
+          <label>Product Name *</label>
+          <input type="text" id="addName" placeholder="My Awesome Item"/>
+        </div>
+        <div class="field">
+          <label>Price ($) *</label>
+          <input type="number" id="addPrice" placeholder="0.00" step="0.01" min="0"/>
+        </div>
+      </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Listing Type</label>
+            <select id="addListingType" onchange="toggleProductTypeFields('add')">
+              <option value="pod">Unlimited stock / Print on demand</option>
+              <option value="limited">Limited time</option>
+              <option value="etsy">Etsy</option>
+            </select>
+          </div>
+          <div class="field" id="addQuantityField">
+            <label>Quantity</label>
+            <input type="number" id="addQuantity" placeholder="12" min="0" step="1"/>
+          </div>
+        </div>
+        <div class="field" id="addEtsyUrlField" style="display:none;">
+          <label>Etsy Trackable URL</label>
+          <input type="text" id="addEtsyUrl" placeholder="https://www.etsy.com/shop/YourShop?ref=seller-platform-mcnav"/>
+          <div class="contact-hint">Paste the Etsy shop or listing URL you want shoppers to land on.</div>
+        </div>
+        <div class="field">
+        <label>Description</label>
+        <textarea id="addDesc" placeholder="Describe your product…"></textarea>
+      </div>
+      <div class="field">
+        <label>Notes (internal)</label>
+        <textarea id="addNotes" placeholder="Internal notes for staff (optional)"></textarea>
+      </div>
+      <div class="field">
+        <label>Variants (optional)</label>
+        <textarea id="addVariants" placeholder="One variant per line, e.g.&#10;Small&#10;Medium&#10;Large"></textarea>
+        <div class="contact-hint">Customers will pick one variant at checkout when variants are set.</div>
+      </div>
+      <div class="field">
+        <label style="display:flex; align-items:center; gap:0.5rem;">
+          <input type="checkbox" id="addHasColors" checked/>
+          Let customers choose a color for this product
+        </label>
+        <div style="font-size:0.75rem; color:var(--muted); margin-top:0.3rem;">The available colors will come from the material you select below.</div>
+      </div>
+      <div class="field">
+        <label style="display:flex; align-items:center; gap:0.5rem;">
+          <input type="checkbox" id="addHasSecondaryColor"/>
+          Let customers choose a secondary color
+        </label>
+      </div>
+      <div class="field">
+        <label>Material</label>
+        <select id="addMaterial" class="material-select" style="width:100%;"></select>
+        <div style="font-size:0.75rem; color:var(--muted); margin-top:0.3rem;">Pick the filament/material first. The storefront will only show colors allowed for that material.</div>
+      </div>
+      <div class="field">
+        <label>Secondary Color Material</label>
+        <select id="addSecondaryMaterial" class="material-select" style="width:100%;"></select>
+        <div style="font-size:0.75rem; color:var(--muted); margin-top:0.3rem;">Secondary color choices will come from this material on storefront.</div>
+      </div>
+      <div class="field">
+        <label>Product Images</label>
+        <div class="img-source-row">
+          <div class="upload-zone">
+            <input type="file" id="addImages" multiple accept="image/*,video/*,image/gif" onchange="previewNewUploads(this,'addPreviews')"/>
+            <div class="upload-zone-icon">⬆️</div>
+            <p>Upload new images</p>
+            <p style="font-size:0.76rem;margin-top:0.2rem"><span>Click or drag & drop</span></p>
+          </div>
+          <div class="library-btn-zone" onclick="openLibrary('add')">
+            <div class="upload-zone-icon">🗂️</div>
+            <p>Pick from library</p>
+            <p style="font-size:0.76rem;margin-top:0.2rem"><span>Browse uploaded images</span></p>
+          </div>
+        </div>
+        <div class="image-preview-row" id="addPreviews"></div>
+      </div>
+      <button class="btn-primary" id="addBtn" onclick="addProduct()">Add Product</button>
+    </div>
+
+    <!-- Product List -->
+    <div class="card">
+      <h2>📦 Your Products</h2>
+      <div class="reorder-hint">⠿ <span>Drag rows</span> to reorder how products appear within the selected menu</div>
+      <div class="product-menu">
+        <button class="product-menu-btn active" id="menuPod" onclick="setProductAdminView('pod')">Unlimited Stock</button>
+        <button class="product-menu-btn" id="menuLimited" onclick="setProductAdminView('limited')">Limited Time</button>
+        <button class="product-menu-btn" id="menuEtsy" onclick="setProductAdminView('etsy')">Etsy</button>
+      </div>
+      <div class="products-list" id="productsList">
+        <div class="empty-state"><span>📭</span>No products yet.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ COLORS TAB ══════════════════ -->
+<div class="tab-page" id="tab-analytics">
+  <div class="container">
+    <div class="page-title">Analytics</div>
+    <div class="page-sub">See how many times each product has been viewed.</div>
+
+    <div class="stats-row" id="statsRow">
+      <div class="stat-box">
+        <div class="stat-label">Total Views</div>
+        <div class="stat-value" id="statTotal">—</div>
+        <div class="stat-sub">across all products</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Unique Visitors</div>
+        <div class="stat-value" id="statVisitors">—</div>
+        <div class="stat-sub">distinct visitor IPs</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="reset-row">
+        <h2 style="margin-bottom:0">📈 Product Views</h2>
+        <div style="display:flex;align-items:center;gap:1rem">
+          <span class="info" id="analyticsResetDate"></span>
+          <button class="btn-danger" onclick="resetAnalytics()">Reset All Stats</button>
+        </div>
+      </div>
+      <div id="analyticsBody"></div>
+    </div>
+
+    <div class="card" style="margin-top:1.5rem">
+      <div class="reset-row">
+        <h2 style="margin-bottom:0">🕵️ Visitor Log</h2>
+        <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
+          <span style="font-size:0.8rem;color:var(--muted)">Shows up to 500 recent views</span>
+          <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.85rem;cursor:pointer">
+            <input type="checkbox" id="hideMyViews" onchange="renderVisitorLog()"> Hide my views
+          </label>
+        </div>
+      </div>
+      <div id="visitorLogBody"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ LOGS TAB ══════════════════ -->
+<div class="tab-page" id="tab-logs">
+  <div class="container">
+    <div class="page-title">Logs</div>
+    <div class="page-sub">Crash and error events captured by the server.</div>
+
+    <div class="card">
+      <div class="reset-row">
+        <h2 style="margin-bottom:0">🧯 Crash & Error Logs</h2>
+        <div style="display:flex;align-items:center;gap:1rem">
+          <span class="info">Shows up to 500 recent entries</span>
+        </div>
+      </div>
+      <div id="logsBody"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ MATERIALS TAB ══════════════════ -->
+<div class="tab-page" id="tab-materials">
+  <div class="container">
+    <div class="page-title">Materials</div>
+    <div class="page-sub">Map materials (PLA, TPU, etc.) to the colors available for each.</div>
+    <div class="card">
+      <h2>🧩 Material → Colors</h2>
+      <div id="materialsList"></div>
+      <div style="display:flex;gap:0.6rem;margin-top:0.8rem">
+        <select id="newMaterialType" style="flex:0 0 220px"></select>
+        <input type="text" id="newMaterialColor" placeholder="Color to add (e.g. Ocean Blue)" style="flex:1"/>
+        <button class="btn-primary" onclick="addMaterialColorFromInputs()">Add Color</button>
+        <button class="btn-secondary" onclick="saveMaterials()">Save Materials</button>
+      </div>
+      <div style="font-size:0.85rem;color:var(--muted);margin-top:0.6rem">Tip: enter a material + color above, then add/remove colors directly on each material row.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ SETTINGS TAB ══════════════════ -->
+<div class="tab-page" id="tab-settings">
+  <div class="container">
+    <div class="page-title">Settings</div>
+    <div class="page-sub">Control store visibility and storefront messaging.</div>
+    <div class="card">
+      <h2>🛠 Store Settings</h2>
+      <div class="field">
+        <label>Store Status</label>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+          <button class="btn-secondary" id="storeOpenBtn" onclick="toggleSetting('storeOpen', true)">Open</button>
+          <button class="btn-secondary" id="storeClosedBtn" onclick="toggleSetting('storeOpen', false)">Closed</button>
+        </div>
+        <div class="contact-hint">When closed, your storefront will show a message instead of products.</div>
+      </div>
+      <div class="field">
+        <label>Public Banner Message</label>
+        <textarea id="publicMessage" rows="3" placeholder="Share updates, announcements, or a store notice…"></textarea>
+      </div>
+      <div class="field">
+        <label>Wallpaper Theme</label>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:center;">
+          <input type="text" id="wallpaperUrl" placeholder="https://example.com/wallpaper.jpg" style="flex:1;min-width:200px;padding:0.7rem;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);"/>
+          <button class="btn-secondary" onclick="openLibraryForWallpaper()">Choose from Library</button>
+        </div>
+        <div class="contact-hint">Set a background image URL for your store theme.</div>
+      </div>
+      <div class="field">
+        <label>Frosted Overlay</label>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+          <button class="btn-secondary" id="frostedOnBtn" onclick="toggleSetting('frostedOverlay', true)">On</button>
+          <button class="btn-secondary" id="frostedOffBtn" onclick="toggleSetting('frostedOverlay', false)">Off</button>
+        </div>
+        <div class="contact-hint">Apply a frosted glass effect over the wallpaper for better text readability.</div>
+      </div>
+      <h2>💳 Payment Methods</h2>
+      <div class="field">
+        <label>Apple Pay</label>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+          <button class="btn-secondary" id="applePayOnBtn" onclick="toggleSetting('enableApplePay', true)">Enabled</button>
+          <button class="btn-secondary" id="applePayOffBtn" onclick="toggleSetting('enableApplePay', false)">Disabled</button>
+        </div>
+        <div class="contact-hint">Allow customers to pay with Apple Pay on supported devices.</div>
+      </div>
+      <div class="field">
+        <label>Google Pay</label>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+          <button class="btn-secondary" id="googlePayOnBtn" onclick="toggleSetting('enableGooglePay', true)">Enabled</button>
+          <button class="btn-secondary" id="googlePayOffBtn" onclick="toggleSetting('enableGooglePay', false)">Disabled</button>
+        </div>
+        <div class="contact-hint">Allow customers to pay with Google Pay on supported devices.</div>
+      </div>
+      <div class="field">
+        <label>Debug Fake Purchase</label>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+          <button class="btn-secondary" id="debugFakeOnBtn" onclick="toggleSetting('debugFakePurchase', true)">Enabled</button>
+          <button class="btn-secondary" id="debugFakeOffBtn" onclick="toggleSetting('debugFakePurchase', false)">Disabled</button>
+        </div>
+        <div class="contact-hint">When enabled, storefront can place fake test orders that send Discord notifications without charging cards.</div>
+      </div>
+      <button class="btn-primary" onclick="saveSettings()">Save Settings</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ CONTACT TAB ══════════════════ -->
+<div class="tab-page" id="tab-contact">
+  <div class="container">
+    <div class="page-title">Contact Info</div>
+    <div class="page-sub">This info is shown on the Contact tab of your storefront.</div>
+    <div class="card">
+      <h2>📬 Your Contact Details</h2>
+      <div class="contact-admin-form">
+        <div class="field">
+          <label>Email Address</label>
+          <input type="email" id="cEmail" placeholder="you@example.com"/>
+        </div>
+        <div class="field">
+          <label>Phone Number</label>
+          <input type="tel" id="cPhone" placeholder="+1 (555) 000-0000"/>
+        </div>
+        <div class="field">
+          <label>Instagram Handle</label>
+          <input type="text" id="cInstagram" placeholder="@yourhandle"/>
+          <div class="contact-hint">Enter just the handle (e.g. @mystore) — the link is generated automatically.</div>
+        </div>
+        <div class="field">
+          <label>Etsy Shop Name</label>
+          <input type="text" id="cEtsy" placeholder="MyEtsyShop"/>
+          <div class="contact-hint">Your Etsy shop name (e.g. MyEtsyShop). Link to etsy.com/shop/... is auto-generated.</div>
+        </div>
+        <div class="field">
+          <label>Custom HTML Block</label>
+          <textarea id="cCustom" rows="4" placeholder="<p>Add any extra info, links, or HTML here…</p>"></textarea>
+          <div class="contact-hint">Rendered as HTML below your contact links on the storefront.</div>
+        </div>
+        <button class="btn-primary" onclick="saveContact()">Save Contact Info</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ LIBRARY TAB ══════════════════ -->
+<div class="tab-page" id="tab-library">
+  <div class="container">
+    <div class="page-title">Image Library</div>
+    <div class="page-sub">All uploaded images. Hover to delete.</div>
+    <div class="card">
+        <div class="lib-toolbar">
+        <input class="lib-search" type="text" id="libTabSearch" placeholder="Search by filename…" oninput="filterLibTab()"/>
+        <span class="lib-count" id="libTabCount"></span>
+        <label class="btn-secondary" style="cursor:pointer">
+          Upload Images
+          <input type="file" multiple accept="image/*,video/*" style="display:none" onchange="uploadToLibrary(this)"/>
+        </label>
+        <button class="btn-secondary" id="clearUnusedBtn" onclick="clearUnusedLibraryImages()">Clear Unused</button>
+      </div>
+      <div class="lib-grid" id="libTabGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Edit Modal ── -->
+<div class="modal-bg" id="editModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeEdit()">✕</button>
+    <h2>✏️ Edit Product</h2>
+    <input type="hidden" id="editId"/>
+    <div class="form-row">
+      <div class="field">
+        <label>Product Name *</label>
+        <input type="text" id="editName"/>
+      </div>
+      <div class="field">
+        <label>Price ($) *</label>
+        <input type="number" id="editPrice" step="0.01" min="0"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label>Listing Type</label>
+        <select id="editListingType" onchange="toggleProductTypeFields('edit')">
+          <option value="pod">Unlimited stock / Print on demand</option>
+          <option value="limited">Limited time</option>
+          <option value="etsy">Etsy</option>
+        </select>
+      </div>
+      <div class="field" id="editQuantityField">
+        <label>Quantity</label>
+        <input type="number" id="editQuantity" placeholder="12" min="0" step="1"/>
+      </div>
+    </div>
+    <div class="field" id="editEtsyUrlField" style="display:none;">
+      <label>Etsy Trackable URL</label>
+      <input type="text" id="editEtsyUrl" placeholder="https://www.etsy.com/shop/YourShop?ref=seller-platform-mcnav"/>
+      <div class="contact-hint">Paste the Etsy shop or listing URL you want shoppers to land on.</div>
+    </div>
+    <div class="field">
+      <label>Description</label>
+      <textarea id="editDesc"></textarea>
+    </div>
+    <div class="field">
+      <label>Notes (internal)</label>
+      <textarea id="editNotes" placeholder="Internal notes for staff (optional)"></textarea>
+    </div>
+    <div class="field">
+      <label>Variants (optional)</label>
+      <textarea id="editVariants" placeholder="One variant per line"></textarea>
+      <div class="contact-hint">Customers will pick one variant at checkout when variants are set.</div>
+    </div>
+    <div class="field">
+      <label style="display:flex; align-items:center; gap:0.5rem;">
+        <input type="checkbox" id="editHasColors" checked/>
+        Let customers choose a color for this product
+      </label>
+      <div style="font-size:0.75rem; color:var(--muted); margin-top:0.3rem;">The available colors will come from the material you select below.</div>
+    </div>
+    <div class="field">
+      <label style="display:flex; align-items:center; gap:0.5rem;">
+        <input type="checkbox" id="editHasSecondaryColor"/>
+        Let customers choose a secondary color
+      </label>
+    </div>
+    <div class="field">
+      <label>Material</label>
+      <select id="editMaterial" class="material-select" style="width:100%;"></select>
+      <div style="font-size:0.75rem; color:var(--muted); margin-top:0.3rem;">Pick the filament/material first. The storefront will only show colors allowed for that material.</div>
+    </div>
+    <div class="field">
+      <label>Secondary Color Material</label>
+      <select id="editSecondaryMaterial" class="material-select" style="width:100%;"></select>
+      <div style="font-size:0.75rem; color:var(--muted); margin-top:0.3rem;">Secondary color choices will come from this material on storefront.</div>
+    </div>
+    <div class="field">
+      <label>Current Images</label>
+      <p class="sort-hint">⠿ <span>Drag to reorder</span> — first image is the cover shown on the store</p>
+      <div class="sortable-images" id="existingImages"></div>
+    </div>
+    <div class="field">
+      <label>Add More Images</label>
+      <div class="img-source-row">
+        <div class="upload-zone">
+          <input type="file" id="editImages" multiple accept="image/*,video/*,image/gif" onchange="previewNewUploads(this,'editPreviews')"/>
+          <div class="upload-zone-icon">⬆️</div>
+          <p>Upload new images</p>
+          <p style="font-size:0.76rem;margin-top:0.2rem"><span>Click or drag & drop</span></p>
+        </div>
+        <div class="library-btn-zone" onclick="openLibrary('edit')">
+          <div class="upload-zone-icon">🗂️</div>
+          <p>Pick from library</p>
+          <p style="font-size:0.76rem;margin-top:0.2rem"><span>Browse uploaded images</span></p>
+        </div>
+      </div>
+      <div class="image-preview-row" id="editPreviews"></div>
+    </div>
+    <button class="btn-primary" onclick="saveEdit()">Save Changes</button>
+  </div>
+</div>
+
+<!-- ── Crop / Rotate Modal ── -->
+<div class="modal-bg" id="cropModal">
+  <div class="crop-modal-inner">
+    <button class="modal-close" onclick="closeCropModal()">&#x2715;</button>
+    <h2>&#x2702;&#xFE0F; Crop &amp; Rotate Image</h2>
+    <div class="crop-stage" id="cropStage">
+      <canvas id="cropCanvas"></canvas>
+      <div class="crop-selection" id="cropSelection" style="display:none">
+        <div class="crop-handle nw" data-handle="nw"></div>
+        <div class="crop-handle ne" data-handle="ne"></div>
+        <div class="crop-handle sw" data-handle="sw"></div>
+        <div class="crop-handle se" data-handle="se"></div>
+      </div>
+    </div>
+    <div class="crop-controls">
+      <div class="ctrl-group">
+        <label>Rotate</label>
+        <button class="crop-btn-ctrl" onclick="cropRotate(-90)">&#x21BA; 90&deg;</button>
+        <button class="crop-btn-ctrl" onclick="cropRotate(90)">&#x21BB; 90&deg;</button>
+        <button class="crop-btn-ctrl" onclick="cropRotate(180)">&#x21D5; 180&deg;</button>
+      </div>
+      <div class="ctrl-group">
+        <label>Flip</label>
+        <button class="crop-btn-ctrl" onclick="cropFlip('h')">&#x21C4; H</button>
+        <button class="crop-btn-ctrl" onclick="cropFlip('v')">&#x21C5; V</button>
+      </div>
+      <div class="ctrl-group" style="margin-left:auto">
+        <label>Crop</label>
+        <button class="crop-btn-ctrl" id="cropModeBtn" onclick="toggleCropMode()">&#x25A1; Enable Crop</button>
+      </div>
+    </div>
+    <div class="crop-controls" id="aspectRow" style="display:none">
+      <label>Aspect ratio</label>
+      <div class="crop-aspect-row">
+        <span class="aspect-chip active" data-ratio="free" onclick="setAspect(this,'free')">Free</span>
+        <span class="aspect-chip" data-ratio="1" onclick="setAspect(this,1)">1:1</span>
+        <span class="aspect-chip" data-ratio="1.3333" onclick="setAspect(this,1.3333)">4:3</span>
+        <span class="aspect-chip" data-ratio="1.7778" onclick="setAspect(this,1.7778)">16:9</span>
+        <span class="aspect-chip" data-ratio="0.75" onclick="setAspect(this,0.75)">3:4</span>
+        <span class="aspect-chip" data-ratio="0.5625" onclick="setAspect(this,0.5625)">9:16</span>
+      </div>
+    </div>
+    <div class="crop-actions">
+      <button class="crop-btn-ctrl" onclick="cropReset()">&#x21A9; Reset All</button>
+      <button class="btn-primary" onclick="cropApply()">Apply Changes &#x2713;</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Library Picker Modal ── -->
+<div class="modal-bg" id="libraryModal">
+  <div class="modal lib-modal">
+    <button class="modal-close" onclick="closeLibrary()">✕</button>
+    <h2>🗂️ Image Library</h2>
+    <div class="lib-toolbar">
+      <input class="lib-search" type="text" id="libSearch" placeholder="Search by filename…" oninput="filterLibrary()"/>
+      <span class="lib-count" id="libCount"></span>
+      <button class="lib-confirm" onclick="confirmLibrarySelection()">Add Selected ✓</button>
+    </div>
+    <div class="lib-grid" id="libGrid"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="upload-progress" id="uploadProgress">
+  <div class="upload-progress-head">
+    <span id="uploadProgressLabel">Uploading files…</span>
+    <span id="uploadProgressPct">0%</span>
+  </div>
+  <div class="upload-progress-track"><div class="upload-progress-bar" id="uploadProgressBar"></div></div>
+</div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────
+let products       = [];
+let keepImages     = [];
+let dragSrc        = null;
+let libraryContext = 'add';
+let libSelected    = [];
+let libraryAll     = [];
+let analyticsData  = null;
+let logsData       = [];
+let settingsData   = null;
+let rowDragSrc     = null;
+let productAdminView = 'pod';
+let materialsMap = {};
+const FILAMENT_MATERIALS = ['PLA', 'TPU', 'PETG', 'ASA'];
+
+// ── Tab switching ─────────────────────────────────────────────────
+function showTab(name, event) {
+  document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  const tab = document.getElementById('tab-' + name);
+  if (tab) tab.classList.add('active');
+  if (event && event.currentTarget) event.currentTarget.classList.add('active');
+  if (name === 'analytics') loadAnalytics();
+  if (name === 'logs') loadLogs();
+  if (name === 'materials') loadMaterials();
+  if (name === 'contact')   loadContact();
+  if (name === 'library')   loadLibraryTab();
+  if (name === 'settings')  loadSettings();
+  if (name === 'products')  loadProducts();
+}
+
+function adminFetch(input, init = {}) {
+  const headers = new Headers(init.headers || {});
+  headers.set('X-Admin-Request', '1');
+  return fetch(input, { ...init, headers }).then(async res => {
+    if (res.status === 401) {
+      showToast('⚠️ Admin session expired. Please sign in again.');
+      setTimeout(() => { window.location.href = '/admin/login'; }, 350);
+      throw new Error('Admin session expired');
+    }
+    return res;
+  });
+}
+
+function showUploadProgress(label = 'Uploading files…') {
+  const box = document.getElementById('uploadProgress');
+  document.getElementById('uploadProgressLabel').textContent = label;
+  document.getElementById('uploadProgressPct').textContent = '0%';
+  document.getElementById('uploadProgressBar').style.width = '0%';
+  box.classList.add('show');
+}
+
+function updateUploadProgress(percent, label) {
+  const clamped = Math.max(0, Math.min(100, Math.round(percent || 0)));
+  if (label) document.getElementById('uploadProgressLabel').textContent = label;
+  document.getElementById('uploadProgressPct').textContent = `${clamped}%`;
+  document.getElementById('uploadProgressBar').style.width = `${clamped}%`;
+}
+
+function hideUploadProgress(delayMs = 350) {
+  const box = document.getElementById('uploadProgress');
+  setTimeout(() => box.classList.remove('show'), delayMs);
+}
+
+function uploadFormDataWithProgress(url, formData, { method = 'POST', label = 'Uploading files…' } = {}) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    showUploadProgress(label);
+    xhr.open(method, url, true);
+    xhr.setRequestHeader('X-Admin-Request', '1');
+
+    xhr.upload.onprogress = event => {
+      if (!event.lengthComputable) {
+        updateUploadProgress(50, label);
+        return;
+      }
+      const pct = (event.loaded / event.total) * 100;
+      updateUploadProgress(pct, label);
+    };
+
+    xhr.onerror = () => {
+      hideUploadProgress(0);
+      reject(new Error('Network upload failure'));
+    };
+
+    xhr.onload = () => {
+      updateUploadProgress(100, label);
+      hideUploadProgress(300);
+      if (xhr.status === 401) {
+        showToast('⚠️ Admin session expired. Please sign in again.');
+        setTimeout(() => { window.location.href = '/admin/login'; }, 350);
+        return reject(new Error('Admin session expired'));
+      }
+      let data = {};
+      try { data = xhr.responseText ? JSON.parse(xhr.responseText) : {}; }
+      catch { data = {}; }
+      resolve({ ok: xhr.status >= 200 && xhr.status < 300, status: xhr.status, data });
+    };
+
+    xhr.send(formData);
+  });
+}
+
+function setProductAdminView(type) {
+  productAdminView = type === 'limited' || type === 'etsy' ? type : 'pod';
+  document.getElementById('addListingType').value = productAdminView;
+  toggleProductTypeFields('add');
+  document.getElementById('menuPod').classList.toggle('active', productAdminView === 'pod');
+  document.getElementById('menuLimited').classList.toggle('active', productAdminView === 'limited');
+  document.getElementById('menuEtsy').classList.toggle('active', productAdminView === 'etsy');
+  renderList();
+}
+
+function toggleProductTypeFields(prefix) {
+  const type = document.getElementById(prefix + 'ListingType').value;
+  const quantityField = document.getElementById(prefix + 'QuantityField');
+  const etsyField = document.getElementById(prefix + 'EtsyUrlField');
+  if (quantityField) quantityField.style.display = type === 'limited' ? '' : 'none';
+  if (etsyField) etsyField.style.display = type === 'etsy' ? '' : 'none';
+}
+
+// ── Products ──────────────────────────────────────────────────────
+async function loadProducts() {
+  const res = await adminFetch('/api/products');
+  products = await res.json();
+  setProductAdminView(productAdminView);
+  renderList();
+}
+
+function renderList() {
+  const list = document.getElementById('productsList');
+  const filtered = products.filter(p => getAdminListingType(p) === productAdminView);
+  if (!filtered.length) {
+    const emptyLabel = productAdminView === 'pod' ? 'Unlimited Stock' : productAdminView === 'limited' ? 'Limited Time' : 'Etsy';
+    list.innerHTML = `<div class="empty-state"><span>📭</span>No ${emptyLabel.toLowerCase()} products yet. Add your first one above!</div>`;
+    return;
+  }
+  list.innerHTML = '';
+  filtered.forEach((p, i) => {
+    const listingType = getAdminListingType(p);
+    const quantity = p.quantity === undefined || p.quantity === null || p.quantity === '' ? null : Math.max(0, parseInt(p.quantity, 10) || 0);
+    const stockLabel = listingType === 'etsy' ? 'Etsy listing' : listingType === 'limited' ? (quantity === null ? 'Quantity not set' : quantity === 0 ? 'Sold out' : `${quantity} left`) : 'Unlimited stock';
+    const row = document.createElement('div');
+    row.className = 'product-row';
+    row.draggable = true;
+    row.dataset.id = p.id;
+    row.innerHTML = `
+      <div class="drag-handle-row">⠿</div>
+      <div class="product-thumb">
+        ${p.images && p.images.length ? `<img src="${esc(p.images[0])}" alt="${esc(p.name)}"/>` : '📦'}
+      </div>
+      <div class="product-info">
+        <strong>${esc(p.name)}</strong>
+        <span>${p.description ? esc(p.description.substring(0,80) + (p.description.length>80?'…':'')) : 'No description'}</span>
+        <div class="product-badges">
+          <span class="product-badge">${listingType === 'etsy' ? 'Etsy' : listingType === 'limited' ? 'Limited' : 'Unlimited'}</span>
+          ${Array.isArray(p.variants) && p.variants.length ? `<span class="product-badge">${p.variants.length} variant${p.variants.length === 1 ? '' : 's'}</span>` : ''}
+          ${p.hasFilaments ? `<span class="product-badge">${esc(p.material || p.primaryFilament || p.filamentType || 'Material')}</span>` : ''}
+          <span class="product-badge">${stockLabel}</span>
+        </div>
+      </div>
+      <span class="product-price">$${parseFloat(p.price).toFixed(2)}</span>
+      <div class="product-actions">
+        <button class="btn-edit"   onclick="openEdit('${p.id}')">Edit</button>
+        <button class="btn-danger" data-id="${esc(p.id)}" data-name="${esc(p.name)}" onclick="deleteProduct(this.dataset.id,this.dataset.name)">Delete</button>
+      </div>
+    `;
+    row.addEventListener('dragstart', onRowDragStart);
+    row.addEventListener('dragover',  onRowDragOver);
+    row.addEventListener('dragleave', onRowDragLeave);
+    row.addEventListener('drop',      onRowDrop);
+    row.addEventListener('dragend',   onRowDragEnd);
+    list.appendChild(row);
+  });
+}
+
+function getAdminListingType(product) {
+  if (!product) return 'pod';
+  if (product.listingType === 'etsy') return 'etsy';
+  if (product.listingType === 'limited' || product.listingType === 'inventory') return 'limited';
+  return 'pod';
+}
+
+// ── Row drag-to-reorder ───────────────────────────────────────────
+function onRowDragStart(e) { rowDragSrc = this; this.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; }
+function onRowDragOver(e)  { e.preventDefault(); if (this !== rowDragSrc) this.classList.add('drag-over'); }
+function onRowDragLeave()  { this.classList.remove('drag-over'); }
+function onRowDrop(e) {
+  e.preventDefault(); this.classList.remove('drag-over');
+  if (this === rowDragSrc) return;
+  const fromId = rowDragSrc.dataset.id, toId = this.dataset.id;
+  const fromIdx = products.findIndex(p => p.id === fromId);
+  const toIdx   = products.findIndex(p => p.id === toId);
+  const [moved] = products.splice(fromIdx, 1);
+  products.splice(toIdx, 0, moved);
+  renderList();
+  // Persist reorder
+  adminFetch('/api/products/reorder', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ids: products.map(p => p.id) })
+  }).then(() => showToast('✅ Order saved'));
+}
+function onRowDragEnd() {
+  document.querySelectorAll('.product-row').forEach(r => r.classList.remove('dragging','drag-over'));
+  rowDragSrc = null;
+}
+
+// ── File upload preview ───────────────────────────────────────────
+function previewNewUploads(input, containerId) {
+  const container = document.getElementById(containerId);
+  Array.from(input.files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const dataUrl = e.target.result;
+      const wrap = document.createElement('div');
+      wrap.className = 'preview-thumb';
+      wrap.dataset.originalSrc = dataUrl;
+      // If this is a video file, render a small video element instead of an img
+      if (file.type && file.type.startsWith('video/')) {
+        wrap.innerHTML = `<video src="${dataUrl}" muted loop playsinline style="width:100%;height:100%;object-fit:cover"></video>
+          <button class="remove-btn" onclick="this.parentNode.remove()">&#x2715;</button>`;
+      } else {
+        wrap.innerHTML = `<img src="${dataUrl}" alt="preview"/>
+          <button class="remove-btn" onclick="this.parentNode.remove()">&#x2715;</button>
+          <button class="edit-btn" title="Crop &amp; Rotate" onclick="openCropForThumb(this.parentNode)">&#x2702;</button>`;
+      }
+      container.appendChild(wrap);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ── Add product ───────────────────────────────────────────────────
+async function addProduct() {
+  const name  = document.getElementById('addName').value.trim();
+  const price = document.getElementById('addPrice').value;
+  if (!name || !price) return showToast('&#x274C; Name and price are required.');
+
+  const listingType = document.getElementById('addListingType').value === 'etsy'
+    ? 'etsy'
+    : document.getElementById('addListingType').value === 'limited'
+      ? 'limited'
+      : 'pod';
+  const quantity = document.getElementById('addQuantity').value;
+  const etsyUrl = document.getElementById('addEtsyUrl').value.trim();
+  const variants = parseVariantsFromText(document.getElementById('addVariants') ? document.getElementById('addVariants').value : '');
+  if (listingType === 'limited' && quantity === '') return showToast('&#x274C; Set a quantity for limited-time items.');
+  if (listingType === 'etsy' && !etsyUrl) return showToast('&#x274C; Paste an Etsy URL for Etsy listings.');
+
+  const btn = document.getElementById('addBtn');
+  btn.disabled = true; btn.textContent = 'Adding\u2026';
+  try {
+    const pickedUrls = getLibraryPicked('addPreviews');
+    const fd = new FormData();
+    fd.append('name', name);
+    fd.append('price', price);
+    fd.append('description', document.getElementById('addDesc').value.trim());
+    fd.append('notes', document.getElementById('addNotes') ? document.getElementById('addNotes').value.trim() : '');
+    fd.append('hasColors', document.getElementById('addHasColors') ? document.getElementById('addHasColors').checked.toString() : 'false');
+    fd.append('hasSecondaryColor', document.getElementById('addHasSecondaryColor') ? document.getElementById('addHasSecondaryColor').checked.toString() : 'false');
+    fd.append('hasFilaments', String(Boolean((document.getElementById('addMaterial') && document.getElementById('addMaterial').value) || (document.getElementById('addPrimaryFilament') && document.getElementById('addPrimaryFilament').value))));
+    fd.append('material', document.getElementById('addMaterial') ? document.getElementById('addMaterial').value : (document.getElementById('addPrimaryFilament') ? document.getElementById('addPrimaryFilament').value : ''));
+    fd.append('filamentType', document.getElementById('addMaterial') ? document.getElementById('addMaterial').value : (document.getElementById('addFilamentType') ? document.getElementById('addFilamentType').value.trim() : ''));
+    fd.append('primaryFilament', document.getElementById('addMaterial') ? document.getElementById('addMaterial').value : (document.getElementById('addPrimaryFilament') ? document.getElementById('addPrimaryFilament').value : 'PLA'));
+    fd.append('secondaryFilament', document.getElementById('addSecondaryMaterial') ? document.getElementById('addSecondaryMaterial').value : (document.getElementById('addMaterial') ? document.getElementById('addMaterial').value : 'PLA'));
+    fd.append('listingType', listingType);
+    fd.append('quantity', quantity);
+    fd.append('etsyUrl', etsyUrl);
+    fd.append('variants', JSON.stringify(variants));
+    fd.append('pickedImages', JSON.stringify(pickedUrls));
+
+    // Upload previews: send blob if edited, otherwise the original file data
+    // We track all thumbs that are file-based (not lib picks)
+    const thumbs = document.querySelectorAll('#addPreviews .preview-thumb:not([data-lib-url])');
+    let imgIdx = 0;
+    const editedCount = [...thumbs].filter(t => t.dataset.editedSrc).length;
+    if (editedCount > 0) {
+      // Send all as blobs (edited or original data URL)
+      for (const thumb of thumbs) {
+        const src = thumb.dataset.editedSrc || thumb.querySelector('img').src;
+        if (src.startsWith('data:')) {
+          const blob = await dataUrlToBlob(src);
+          fd.append('images', blob, `img-${imgIdx++}.jpg`);
+        }
+      }
+    } else {
+      // No edits — send original files directly
+      for (const f of document.getElementById('addImages').files) fd.append('images', f);
+    }
+
+    const result = await uploadFormDataWithProgress('/api/products', fd, { method: 'POST', label: 'Uploading listing images…' });
+    const data = result.data || {};
+    if (!result.ok || !data.success) {
+      const message = data.error || 'Failed to add product.';
+      showToast('❌ ' + message);
+      return;
+    }
+
+    showToast('\u2705 Product added!');
+    ['addName','addPrice','addDesc','addQuantity','addEtsyUrl','addVariants'].forEach(id => document.getElementById(id).value = '');
+    if (document.getElementById('addHasColors')) document.getElementById('addHasColors').checked = false;
+    if (document.getElementById('addHasSecondaryColor')) document.getElementById('addHasSecondaryColor').checked = false;
+    document.getElementById('addListingType').value = productAdminView;
+    toggleProductTypeFields('add');
+    document.getElementById('addImages').value  = '';
+    document.getElementById('addPreviews').innerHTML = '';
+    loadProducts();
+  } catch (err) {
+    showToast('\u274C Failed to add product.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Add Product';
+  }
+}
+
+// ── Edit modal ────────────────────────────────────────────────────
+function openEdit(id) {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  const listingType = getAdminListingType(p);
+  document.getElementById('editId').value    = p.id;
+  document.getElementById('editName').value  = p.name;
+  document.getElementById('editPrice').value = p.price;
+  document.getElementById('editDesc').value  = p.description || '';
+  if (document.getElementById('editNotes')) document.getElementById('editNotes').value = p.notes || '';
+  if (document.getElementById('editVariants')) document.getElementById('editVariants').value = Array.isArray(p.variants) ? p.variants.join('\n') : '';
+  if (document.getElementById('editHasColors')) document.getElementById('editHasColors').checked = p.hasColors || false;
+  if (document.getElementById('editHasSecondaryColor')) document.getElementById('editHasSecondaryColor').checked = p.hasSecondaryColor || false;
+  if (document.getElementById('editMaterial')) document.getElementById('editMaterial').value = p.material || p.primaryFilament || p.filamentType || 'PLA';
+  if (document.getElementById('editSecondaryMaterial')) document.getElementById('editSecondaryMaterial').value = p.secondaryFilament || p.material || p.primaryFilament || p.filamentType || 'PLA';
+  document.getElementById('editListingType').value = listingType;
+  document.getElementById('editQuantity').value = p.quantity === undefined || p.quantity === null ? '' : p.quantity;
+  document.getElementById('editEtsyUrl').value = p.etsyUrl || '';
+  toggleProductTypeFields('edit');
+  toggleFilamentFields('edit');
+  document.getElementById('editPreviews').innerHTML = '';
+  document.getElementById('editImages').value = '';
+  keepImages = [...(p.images || [])];
+  renderSortableImages();
+  document.getElementById('editModal').classList.add('open');
+}
+function closeEdit() { document.getElementById('editModal').classList.remove('open'); }
+
+async function saveEdit() {
+  const id    = document.getElementById('editId').value;
+  const name  = document.getElementById('editName').value.trim();
+  const price = document.getElementById('editPrice').value;
+  if (!name || !price) return showToast('\u274C Name and price are required.');
+
+  const listingType = document.getElementById('editListingType').value === 'etsy'
+    ? 'etsy'
+    : document.getElementById('editListingType').value === 'limited'
+      ? 'limited'
+      : 'pod';
+  const quantity = document.getElementById('editQuantity').value;
+  const etsyUrl = document.getElementById('editEtsyUrl').value.trim();
+  const variants = parseVariantsFromText(document.getElementById('editVariants') ? document.getElementById('editVariants').value : '');
+  if (listingType === 'limited' && quantity === '') return showToast('\u274C Set a quantity for limited-time items.');
+  if (listingType === 'etsy' && !etsyUrl) return showToast('\u274C Paste an Etsy URL for Etsy listings.');
+
+  const pickedUrls = getLibraryPicked('editPreviews');
+  const fd = new FormData();
+  fd.append('name', name);
+  fd.append('price', price);
+  fd.append('description', document.getElementById('editDesc').value.trim());
+  fd.append('hasColors', document.getElementById('editHasColors') ? document.getElementById('editHasColors').checked.toString() : 'false');
+  fd.append('hasSecondaryColor', document.getElementById('editHasSecondaryColor') ? document.getElementById('editHasSecondaryColor').checked.toString() : 'false');
+  fd.append('listingType', listingType);
+  fd.append('quantity', quantity);
+  fd.append('etsyUrl', etsyUrl);
+  fd.append('variants', JSON.stringify(variants));
+
+  // keepImages may now include data: URLs for cropped existing images
+  const keepForServer = keepImages.filter(s => !s.startsWith('data:'));
+  const editedExisting = keepImages.filter(s => s.startsWith('data:'));
+  fd.append('keepImages',   JSON.stringify(keepForServer));
+  fd.append('pickedImages', JSON.stringify(pickedUrls));
+  fd.append('hasFilaments', 'true');
+  fd.append('material', document.getElementById('editMaterial') ? document.getElementById('editMaterial').value : (document.getElementById('editPrimaryFilament') ? document.getElementById('editPrimaryFilament').value : ''));
+  fd.append('filamentType', document.getElementById('editMaterial') ? document.getElementById('editMaterial').value : (document.getElementById('editFilamentType') ? document.getElementById('editFilamentType').value.trim() : ''));
+  fd.append('primaryFilament', document.getElementById('editMaterial') ? document.getElementById('editMaterial').value : (document.getElementById('editPrimaryFilament') ? document.getElementById('editPrimaryFilament').value : 'PLA'));
+  fd.append('secondaryFilament', document.getElementById('editSecondaryMaterial') ? document.getElementById('editSecondaryMaterial').value : (document.getElementById('editMaterial') ? document.getElementById('editMaterial').value : 'PLA'));
+  fd.append('notes', document.getElementById('editNotes') ? document.getElementById('editNotes').value.trim() : '');
+
+  // Upload cropped existing images as new files
+  let imgIdx = 0;
+  for (const dataUrl of editedExisting) {
+    const blob = await dataUrlToBlob(dataUrl);
+    fd.append('images', blob, `edited-existing-${imgIdx++}.jpg`);
+  }
+
+  // New preview thumbs (uploaded files, possibly edited)
+  const thumbs = document.querySelectorAll('#editPreviews .preview-thumb:not([data-lib-url])');
+  for (const thumb of thumbs) {
+    const editedSrc = thumb.dataset.editedSrc;
+    if (editedSrc && editedSrc.startsWith('data:')) {
+      const blob = await dataUrlToBlob(editedSrc);
+      fd.append('images', blob, `edited-new-${imgIdx++}.jpg`);
+    }
+  }
+  for (const f of document.getElementById('editImages').files) fd.append('images', f);
+
+  try {
+    const result = await uploadFormDataWithProgress('/api/products/' + id, fd, { method: 'PUT', label: 'Uploading product changes…' });
+    const data = result.data || {};
+    if (result.ok && data.success) { showToast('\u2705 Product updated!'); closeEdit(); loadProducts(); }
+    else showToast(`\u274C ${data.error || 'Update failed.'}`);
+  } catch (err) {
+    showToast(`\u274C ${err && err.message ? err.message : 'Update failed.'}`);
+    hideUploadProgress(0);
+  }
+}
+
+function getLibraryPicked(containerId) {
+  return [...document.querySelectorAll(`#${containerId} .preview-thumb[data-lib-url]`)].map(el => el.dataset.libUrl);
+}
+
+function parseVariantsFromText(raw) {
+  const lines = String(raw || '').split(/\r?\n|,/g);
+  const seen = new Set();
+  const out = [];
+  for (const line of lines) {
+    const value = String(line || '').trim();
+    if (!value) continue;
+    const key = value.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(value);
+  }
+  return out;
+}
+
+// ── Sortable images (inside edit modal) ──────────────────────────
+function renderSortableImages() {
+  const container = document.getElementById('existingImages');
+  if (!keepImages.length) {
+    container.innerHTML = '<span style="color:var(--muted);font-size:0.85rem;padding:0.5rem">No images — add some below</span>';
+    return;
+  }
+  container.innerHTML = '';
+  keepImages.forEach((src, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'sort-img-wrap' + (i === 0 ? ' first-img' : '');
+    wrap.draggable = true;
+    wrap.dataset.index = i;
+    wrap.innerHTML = `
+      <div class="drag-handle">&#x2838;</div>
+      <img src="${esc(src)}" alt="img"/>
+      <button class="remove-existing" onclick="removeKeepImage(${i})">&#x2715;</button>
+      <button class="crop-btn" title="Crop &amp; Rotate" onclick="openCropForKeepImage(${i})">&#x2702;</button>
+    `;
+    wrap.addEventListener('dragstart', onImgDragStart);
+    wrap.addEventListener('dragover',  onImgDragOver);
+    wrap.addEventListener('dragleave', onImgDragLeave);
+    wrap.addEventListener('drop',      onImgDrop);
+    wrap.addEventListener('dragend',   onImgDragEnd);
+    container.appendChild(wrap);
+  });
+  container.addEventListener('dragover',  e => { e.preventDefault(); container.classList.add('drag-over'); });
+  container.addEventListener('dragleave', () => container.classList.remove('drag-over'));
+  container.addEventListener('drop',      () => container.classList.remove('drag-over'));
+}
+
+function onImgDragStart(e) { dragSrc = this; this.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; }
+function onImgDragOver(e)  { e.preventDefault(); if (this !== dragSrc) this.classList.add('drag-target'); }
+function onImgDragLeave()  { this.classList.remove('drag-target'); }
+function onImgDrop(e) {
+  e.preventDefault(); this.classList.remove('drag-target');
+  if (this === dragSrc) return;
+  const from = parseInt(dragSrc.dataset.index), to = parseInt(this.dataset.index);
+  const moved = keepImages.splice(from, 1)[0];
+  keepImages.splice(to, 0, moved);
+  renderSortableImages();
+  showToast('🖼️ Order updated — save to apply.');
+}
+function onImgDragEnd() {
+  document.querySelectorAll('.sort-img-wrap').forEach(el => el.classList.remove('dragging','drag-target'));
+  document.getElementById('existingImages').classList.remove('drag-over');
+  dragSrc = null;
+}
+function removeKeepImage(idx) { keepImages.splice(idx, 1); renderSortableImages(); }
+
+// ── Delete product ────────────────────────────────────────────────
+async function deleteProduct(id, name) {
+  if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+  const res  = await adminFetch('/api/products/' + id, { method: 'DELETE' });
+  const data = await res.json();
+  if (data.success) { showToast('🗑️ Product deleted.'); loadProducts(); }
+}
+
+// ── Materials manager ─────────────────────────────────────────────────────
+function normalizeMaterialName(name) {
+  return String(name || '').trim().toUpperCase();
+}
+
+function normalizeColorName(name) {
+  return String(name || '').trim();
+}
+
+function populateMaterialSelects(materials) {
+  materialsMap = materials || {};
+  const materialOptions = Array.from(new Set([...FILAMENT_MATERIALS, ...Object.keys(materialsMap).map(normalizeMaterialName)]));
+  const selects = document.querySelectorAll('.material-select, .filament-material-select');
+  selects.forEach(sel => {
+    const current = sel.value;
+    sel.innerHTML = '';
+    materialOptions.forEach(mat => {
+      const opt = document.createElement('option');
+      opt.value = mat;
+      opt.textContent = mat;
+      sel.appendChild(opt);
+    });
+    const normalizedCurrent = normalizeMaterialName(current);
+    if (normalizedCurrent && materialOptions.includes(normalizedCurrent)) sel.value = normalizedCurrent;
+    else if (materialOptions.length) sel.value = materialOptions[0];
+  });
+
+  const quickMaterial = document.getElementById('newMaterialType');
+  if (quickMaterial) {
+    const current = normalizeMaterialName(quickMaterial.value);
+    quickMaterial.innerHTML = '';
+    materialOptions.forEach(mat => {
+      const opt = document.createElement('option');
+      opt.value = mat;
+      opt.textContent = mat;
+      quickMaterial.appendChild(opt);
+    });
+    if (current && materialOptions.includes(current)) quickMaterial.value = current;
+    else if (materialOptions.length) quickMaterial.value = materialOptions[0];
+  }
+}
+
+async function loadMaterials() {
+  const [materialsRes, filamentsRes] = await Promise.all([
+    adminFetch('/api/materials'),
+    adminFetch('/api/filaments')
+  ]);
+  const materials = await materialsRes.json();
+  const filaments = await filamentsRes.json();
+
+  const fromFilaments = {};
+  (Array.isArray(filaments) ? filaments : []).forEach(entry => {
+    const parts = String(entry || '').split(':');
+    const material = normalizeMaterialName(parts[0]);
+    const color = normalizeColorName(parts.slice(1).join(':'));
+    if (!material || !color) return;
+    if (!fromFilaments[material]) fromFilaments[material] = [];
+    if (!fromFilaments[material].some(c => c.toLowerCase() === color.toLowerCase())) fromFilaments[material].push(color);
+  });
+
+  const source = Object.keys(fromFilaments).length ? fromFilaments : (materials || {});
+  populateMaterialSelects(source);
+  renderMaterials(source);
+}
+
+function renderMaterials(materials) {
+  const container = document.getElementById('materialsList');
+  container.innerHTML = '';
+  const keys = Object.keys(materials || {});
+  if (!keys.length) {
+    container.innerHTML = '<div class="empty-state">No materials configured yet.</div>';
+    return;
+  }
+  keys.forEach(mat => createMaterialRow(mat, Array.isArray(materials[mat]) ? materials[mat] : []));
+}
+
+function createMaterialRow(materialName, colors = []) {
+  const container = document.getElementById('materialsList');
+  const row = document.createElement('div');
+  row.dataset.materialRow = '1';
+  row.style.border = '1px solid var(--border)';
+  row.style.borderRadius = '10px';
+  row.style.padding = '0.8rem';
+  row.style.marginBottom = '0.7rem';
+
+  const header = document.createElement('div');
+  header.style.display = 'flex';
+  header.style.gap = '0.6rem';
+  header.style.alignItems = 'center';
+  header.style.marginBottom = '0.6rem';
+
+  const nameIn = document.createElement('input');
+  nameIn.value = normalizeMaterialName(materialName);
+  nameIn.placeholder = 'Material name';
+  nameIn.dataset.materialName = '1';
+  nameIn.style.flex = '0 0 220px';
+
+  const remove = document.createElement('button');
+  remove.className = 'btn-secondary';
+  remove.textContent = 'Remove Material';
+  remove.onclick = () => row.remove();
+
+  header.appendChild(nameIn);
+  header.appendChild(remove);
+
+  const chips = document.createElement('div');
+  chips.dataset.colorsWrap = '1';
+  chips.style.display = 'flex';
+  chips.style.flexWrap = 'wrap';
+  chips.style.gap = '0.45rem';
+  chips.style.marginBottom = '0.6rem';
+
+  const addBar = document.createElement('div');
+  addBar.style.display = 'flex';
+  addBar.style.gap = '0.5rem';
+  addBar.style.alignItems = 'center';
+
+  const addInput = document.createElement('input');
+  addInput.placeholder = 'Add color for this material';
+  addInput.dataset.newColorInput = '1';
+  addInput.style.flex = '1';
+
+  const addBtn = document.createElement('button');
+  addBtn.className = 'btn-primary';
+  addBtn.textContent = 'Add Color';
+  addBtn.onclick = () => {
+    const color = addInput.value.trim();
+    if (!color) return;
+    addColorChip(chips, color);
+    addInput.value = '';
+  };
+
+  addBar.appendChild(addInput);
+  addBar.appendChild(addBtn);
+
+  row.appendChild(header);
+  row.appendChild(chips);
+  row.appendChild(addBar);
+  container.appendChild(row);
+
+  const uniqueColors = [];
+  colors.map(c => normalizeColorName(c)).filter(Boolean).forEach(color => {
+    if (!uniqueColors.some(existing => existing.toLowerCase() === color.toLowerCase())) uniqueColors.push(color);
+  });
+  uniqueColors.forEach(color => addColorChip(chips, color));
+}
+
+function addColorChip(colorsWrap, color) {
+  const normalized = normalizeColorName(color);
+  if (!normalized) return;
+  const existing = Array.from(colorsWrap.querySelectorAll('[data-color-chip="1"]')).map(el => el.dataset.colorValue);
+  if (existing.includes(normalized.toLowerCase())) return;
+
+  const chip = document.createElement('span');
+  chip.dataset.colorChip = '1';
+  chip.dataset.colorValue = normalized.toLowerCase();
+  chip.style.display = 'inline-flex';
+  chip.style.alignItems = 'center';
+  chip.style.gap = '0.35rem';
+  chip.style.padding = '0.34rem 0.55rem';
+  chip.style.border = '1px solid var(--border)';
+  chip.style.borderRadius = '999px';
+  chip.style.background = 'var(--surface2)';
+  chip.style.fontSize = '0.82rem';
+  chip.style.color = 'var(--text)';
+  chip.dataset.colorText = normalized;
+
+  const text = document.createElement('span');
+  text.textContent = normalized;
+
+  const removeBtn = document.createElement('button');
+  removeBtn.type = 'button';
+  removeBtn.textContent = '×';
+  removeBtn.style.border = 'none';
+  removeBtn.style.background = 'transparent';
+  removeBtn.style.color = 'var(--muted)';
+  removeBtn.style.cursor = 'pointer';
+  removeBtn.style.fontSize = '0.95rem';
+  removeBtn.onclick = () => chip.remove();
+
+  chip.appendChild(text);
+  chip.appendChild(removeBtn);
+  colorsWrap.appendChild(chip);
+}
+
+function addMaterialColorFromInputs() {
+  const materialSelect = document.getElementById('newMaterialType');
+  const name = normalizeMaterialName(materialSelect ? materialSelect.value : '');
+  const color = normalizeColorName(document.getElementById('newMaterialColor').value);
+  if (!name) return showToast('Select a material type.');
+  if (!color) return showToast('Enter a color to add.');
+
+  const container = document.getElementById('materialsList');
+  const rows = Array.from(container.querySelectorAll('[data-material-row="1"]'));
+  const existingRow = rows.find(row => {
+    const nameInput = row.querySelector('[data-material-name="1"]');
+    return nameInput && normalizeMaterialName(nameInput.value) === name;
+  });
+
+  if (existingRow) {
+    const chips = existingRow.querySelector('[data-colors-wrap="1"]');
+    addColorChip(chips, color);
+  } else {
+    createMaterialRow(name, [color]);
+  }
+
+  document.getElementById('newMaterialColor').value = '';
+}
+
+function addMaterialRowFromInputs() {
+  // Backward compatibility for older handlers.
+  addMaterialColorFromInputs();
+}
+
+async function saveMaterials() {
+  const container = document.getElementById('materialsList');
+  const rows = Array.from(container.querySelectorAll('[data-material-row="1"]'));
+  const out = {};
+  rows.forEach(r => {
+    const nameInput = r.querySelector('[data-material-name="1"]');
+    const chips = Array.from(r.querySelectorAll('[data-color-chip="1"]'));
+    const name = nameInput ? normalizeMaterialName(nameInput.value) : '';
+    const colors = [];
+    chips.map(chip => normalizeColorName(chip.dataset.colorText || '')).filter(Boolean).forEach(color => {
+      if (!colors.some(existing => existing.toLowerCase() === color.toLowerCase())) colors.push(color);
+    });
+    if (name && colors.length) out[name] = colors;
+  });
+  const res = await adminFetch('/api/materials', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ materials: out })
+  });
+  const data = await res.json();
+  if (!data.success) return showToast('❌ Failed to save materials.');
+
+  const filaments = [];
+  Object.keys(out).forEach(mat => {
+    out[mat].forEach(color => filaments.push(`${mat}: ${color}`));
+  });
+  const filRes = await adminFetch('/api/filaments', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ filaments })
+  });
+  const filData = await filRes.json();
+  if (!filData.success) return showToast('❌ Materials saved, but filament rolls failed to sync.');
+
+  materialsMap = out;
+  populateMaterialSelects(out);
+  showToast('🧩 Materials and filament rolls saved!');
+}
+
+function renderFilamentRows(filaments) {
+  const list = document.getElementById('filamentList');
+  list.innerHTML = '';
+  if (!filaments.length) {
+    const empty = document.createElement('div');
+    empty.className = 'filament-empty';
+    empty.style.color = 'var(--muted)';
+    empty.textContent = 'No filament rolls configured.';
+    list.appendChild(empty);
+    return;
+  }
+  filaments.forEach((entry, idx) => {
+    const parts = String(entry || '').split(':');
+    const material = (parts[0] || 'PLA').trim();
+    const color = (parts.slice(1).join(':') || '').trim();
+    appendFilamentRow(material, color, idx);
+  });
+}
+
+function appendFilamentRow(material, color, idx) {
+  const list = document.getElementById('filamentList');
+  const empty = list.querySelector('.filament-empty');
+  if (empty) empty.remove();
+
+  const row = document.createElement('div');
+  row.dataset.filamentRow = '1';
+  row.style.display = 'flex';
+  row.style.gap = '0.5rem';
+  row.style.alignItems = 'center';
+  row.style.flexWrap = 'wrap';
+
+  const materialSelect = document.createElement('select');
+  materialSelect.className = 'filament-material-select';
+  materialSelect.style.flex = '0 0 160px';
+  const materialOptions = Array.from(new Set([...FILAMENT_MATERIALS, ...Object.keys(materialsMap || {})]));
+  materialOptions.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m;
+    opt.textContent = m;
+    materialSelect.appendChild(opt);
+  });
+  materialSelect.value = materialOptions.includes(material) ? material : 'PLA';
+
+  const colorInput = document.createElement('input');
+  colorInput.value = color || '';
+  colorInput.placeholder = 'Color / label';
+  colorInput.style.flex = '1';
+  colorInput.style.minWidth = '180px';
+  colorInput.style.padding = '0.6rem';
+  colorInput.style.border = '1px solid var(--border)';
+  colorInput.style.borderRadius = '8px';
+  colorInput.style.background = 'var(--surface2)';
+  colorInput.style.color = 'var(--text)';
+
+  const remove = document.createElement('button');
+  remove.textContent = 'Remove';
+  remove.className = 'btn-secondary';
+  remove.style.marginLeft = '0.2rem';
+  remove.addEventListener('click', () => removeFilament(idx));
+
+  row.appendChild(materialSelect);
+  row.appendChild(colorInput);
+  row.appendChild(remove);
+  list.appendChild(row);
+}
+
+async function saveFilaments() {
+  const rows = Array.from(document.querySelectorAll('#filamentList [data-filament-row="1"]'));
+  const filaments = rows.map(row => {
+    const material = row.querySelector('select') ? row.querySelector('select').value.trim() : '';
+    const colorInput = row.querySelector('input');
+    const color = colorInput ? colorInput.value.trim() : '';
+    return material && color ? `${material}: ${color}` : '';
+  }).filter(Boolean);
+
+  const res = await adminFetch('/api/filaments', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ filaments })
+  });
+  const data = await res.json();
+  if (data.success) showToast('🧵 Filaments saved!');
+  else showToast('❌ Failed to save filaments.');
+}
+
+function addFilament() {
+  const color = document.getElementById('newFilamentColor').value.trim();
+  const material = document.getElementById('newFilamentMaterial').value;
+  if (!color) return showToast('Please type a color/label before adding.');
+  const idx = document.querySelectorAll('#filamentList [data-filament-row="1"]').length;
+  appendFilamentRow(material, color, idx);
+  document.getElementById('newFilamentColor').value = '';
+  saveFilaments();
+}
+
+function removeFilament(index) {
+  const rows = Array.from(document.querySelectorAll('#filamentList [data-filament-row="1"]'));
+  if (index < 0 || index >= rows.length) return;
+  rows[index].remove();
+  saveFilaments();
+}
+
+function toggleFilamentFields() {
+  // Legacy no-op kept to avoid older inline handlers from crashing.
+}
+
+// ── Library picker modal ──────────────────────────────────────────
+async function openLibrary(context) {
+  libraryContext = context;
+  libSelected = [];
+  document.getElementById('libSearch').value = '';
+  document.getElementById('libraryModal').classList.add('open');
+  document.getElementById('libGrid').innerHTML = '<div class="lib-empty">Loading…</div>';
+  const res = await adminFetch('/api/images');
+  libraryAll = await res.json();
+  renderLibrary(libraryAll);
+}
+
+function openLibraryForWallpaper() {
+  libraryContext = 'wallpaper';
+  libSelected = [];
+  document.getElementById('libSearch').value = '';
+  document.getElementById('libraryModal').classList.add('open');
+  document.getElementById('libGrid').innerHTML = '<div class="lib-empty">Loading…</div>';
+  adminFetch('/api/images').then(res => res.json()).then(images => {
+    libraryAll = images;
+    renderLibrary(libraryAll);
+  });
+}
+function closeLibrary() { document.getElementById('libraryModal').classList.remove('open'); }
+
+function renderLibrary(images) {
+  const grid = document.getElementById('libGrid');
+  document.getElementById('libCount').textContent = images.length ? `${images.length} image${images.length !== 1 ? 's' : ''}` : '';
+  if (!images.length) { grid.innerHTML = '<div class="lib-empty">No images uploaded yet.</div>'; return; }
+  grid.innerHTML = '';
+  images.forEach(img => {
+    const isSelected = libSelected.includes(img.url);
+    const orderNum   = libSelected.indexOf(img.url) + 1;
+    const item = document.createElement('div');
+    item.className = 'lib-item' + (isSelected ? ' selected' : '');
+    item.dataset.url = img.url;
+    // Render videos differently
+    const ext = (img.filename || '').split('.').pop().toLowerCase();
+    if (['mp4','webm'].includes(ext)) {
+      item.innerHTML = `
+        <video src="${esc(img.url)}" muted loop playsinline loading="lazy" style="width:100%;height:100%;object-fit:cover"></video>
+        <div class="lib-check">✓</div>
+        ${isSelected ? `<div class="lib-order">#${orderNum}</div>` : ''}
+        <div class="lib-filename">${esc(img.filename)}</div>
+      `;
+    } else {
+      item.innerHTML = `
+        <img src="${esc(img.url)}" alt="${esc(img.filename)}" loading="lazy"/>
+        <div class="lib-check">✓</div>
+        ${isSelected ? `<div class="lib-order">#${orderNum}</div>` : ''}
+        <div class="lib-filename">${esc(img.filename)}</div>
+      `;
+    }
+    item.addEventListener('click', () => toggleLibItem(img.url));
+    grid.appendChild(item);
+  });
+}
+
+function toggleLibItem(url) {
+  const idx = libSelected.indexOf(url);
+  if (idx === -1) libSelected.push(url); else libSelected.splice(idx, 1);
+  const query = document.getElementById('libSearch').value.toLowerCase().trim();
+  const filtered = query ? libraryAll.filter(i => i.filename.toLowerCase().includes(query)) : libraryAll;
+  renderLibrary(filtered);
+}
+
+function filterLibrary() {
+  const query = document.getElementById('libSearch').value.toLowerCase().trim();
+  renderLibrary(query ? libraryAll.filter(i => i.filename.toLowerCase().includes(query)) : libraryAll);
+}
+
+function confirmLibrarySelection() {
+  if (!libSelected.length) { showToast('No images selected.'); return; }
+  if (libraryContext === 'wallpaper') {
+    document.getElementById('wallpaperUrl').value = libSelected[0];
+    showToast(`✅ Wallpaper set`);
+  } else {
+    const containerId = libraryContext === 'add' ? 'addPreviews' : 'editPreviews';
+    const container   = document.getElementById(containerId);
+    libSelected.forEach(url => {
+      if ([...container.querySelectorAll('[data-lib-url]')].some(el => el.dataset.libUrl === url)) return;
+      const wrap = document.createElement('div');
+      wrap.className = 'preview-thumb';
+      wrap.dataset.libUrl = url;
+      const filename = url.split('/').pop();
+      const ext = (filename || '').split('.').pop().toLowerCase();
+      if (['mp4','webm'].includes(ext)) {
+        wrap.innerHTML = `<video src="${esc(url)}" muted loop playsinline style="width:100%;height:100%;object-fit:cover"></video><button class="remove-btn" onclick="this.parentNode.remove()">✕</button>`;
+      } else {
+        wrap.innerHTML = `<img src="${esc(url)}" alt="library pick"/><button class="remove-btn" onclick="this.parentNode.remove()">✕</button>`;
+      }
+      container.appendChild(wrap);
+    });
+    showToast(`✅ ${libSelected.length} image${libSelected.length !== 1 ? 's' : ''} added`);
+  }
+  libSelected = [];
+  closeLibrary();
+}
+
+// ── Library tab ───────────────────────────────────────────────────
+let libTabAll = [];
+async function loadLibraryTab() {
+  document.getElementById('libTabGrid').innerHTML = '<div class="lib-empty">Loading…</div>';
+  const res = await adminFetch('/api/images');
+  libTabAll = await res.json();
+  renderLibTab(libTabAll);
+}
+
+function renderLibTab(images) {
+  const grid = document.getElementById('libTabGrid');
+  document.getElementById('libTabCount').textContent = images.length ? `${images.length} image${images.length !== 1 ? 's' : ''}` : '';
+  const clearUnusedBtn = document.getElementById('clearUnusedBtn');
+  if (clearUnusedBtn) clearUnusedBtn.disabled = !images.length;
+  if (!images.length) { grid.innerHTML = '<div class="lib-empty">No images uploaded yet. Upload some above!</div>'; return; }
+  grid.innerHTML = '';
+  images.forEach(img => {
+    const item = document.createElement('div');
+    item.className = 'lib-item';
+    const ext = (img.filename || '').split('.').pop().toLowerCase();
+    if (['mp4','webm'].includes(ext)) {
+      item.innerHTML = `
+        <video src="${esc(img.url)}" muted loop playsinline loading="lazy" style="width:100%;height:100%;object-fit:cover"></video>
+        <button class="lib-del" data-filename="${esc(img.filename)}" onclick="deleteLibImage(event, this.dataset.filename, this.closest('.lib-item'))">✕</button>
+        <div class="lib-filename">${esc(img.filename)}</div>
+      `;
+    } else {
+      item.innerHTML = `
+        <img src="${esc(img.url)}" alt="${esc(img.filename)}" loading="lazy"/>
+        <button class="lib-del" data-filename="${esc(img.filename)}" onclick="deleteLibImage(event, this.dataset.filename, this.closest('.lib-item'))">✕</button>
+        <div class="lib-filename">${esc(img.filename)}</div>
+      `;
+    }
+    grid.appendChild(item);
+  });
+}
+
+async function clearUnusedLibraryImages() {
+  if (!confirm('Delete uploaded images that are not used by any product? This cannot be undone.')) return;
+  const btn = document.getElementById('clearUnusedBtn');
+  if (btn) btn.disabled = true;
+  try {
+    const res = await adminFetch('/api/images/clear-unused', { method: 'POST' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.success) {
+      showToast('❌ Unable to clear unused images.');
+      return;
+    }
+    showToast(`🧹 Removed ${data.deletedCount || 0} unused image${(data.deletedCount || 0) === 1 ? '' : 's'}`);
+    loadLibraryTab();
+  } catch (err) {
+    showToast('❌ Unable to clear unused images.');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+function filterLibTab() {
+  const query = document.getElementById('libTabSearch').value.toLowerCase().trim();
+  renderLibTab(query ? libTabAll.filter(i => i.filename.toLowerCase().includes(query)) : libTabAll);
+}
+
+async function deleteLibImage(e, filename, el) {
+  e.stopPropagation();
+  if (!confirm('Delete this image? Products using it may lose their photo.')) return;
+  const res = await adminFetch('/api/images/' + filename, { method: 'DELETE' });
+  const data = await res.json();
+  if (data.success) { el.remove(); libTabAll = libTabAll.filter(i => i.filename !== filename); showToast('🗑️ Image deleted.'); }
+  else showToast('❌ Delete failed.');
+}
+
+async function uploadToLibrary(input) {
+  if (!input.files.length) return;
+  showToast('⏳ Uploading…');
+  const fd = new FormData();
+  for (const f of input.files) fd.append('images', f);
+  try {
+    const result = await uploadFormDataWithProgress('/api/images', fd, { method: 'POST', label: 'Uploading to image library…' });
+    const data = result.data || {};
+    if (result.ok && data.success) {
+      showToast(`✅ ${data.images.length} file${data.images.length !== 1 ? 's' : ''} uploaded`);
+      loadLibraryTab();
+    } else {
+      showToast(`❌ ${data.error || 'Upload failed.'}`);
+    }
+  } catch (e) {
+    showToast(`❌ ${e && e.message ? e.message : 'Upload failed.'}`);
+    hideUploadProgress(0);
+  }
+  input.value = '';
+}
+
+// ── Analytics ─────────────────────────────────────────────────────
+let myIp = null;
+
+async function loadAnalytics() {
+  const [res, ipRes] = await Promise.all([
+    adminFetch('/api/analytics'),
+    adminFetch('/api/analytics/my-ip')
+  ]);
+  analyticsData = await res.json();
+  const ipData = await ipRes.json();
+  myIp = ipData.ip || null;
+  renderAnalytics();
+  renderVisitorLog();
+}
+
+async function loadLogs() {
+  const body = document.getElementById('logsBody');
+  if (body) body.innerHTML = `<div class="analytics-empty">Loading logs…</div>`;
+  try {
+    const res = await adminFetch('/api/logs');
+    logsData = await res.json();
+    renderLogs();
+  } catch (err) {
+    logsData = [];
+    if (body) body.innerHTML = `<div class="analytics-empty">Unable to load logs.</div>`;
+  }
+}
+
+function renderAnalytics() {
+  const d = analyticsData;
+  document.getElementById('statTotal').textContent   = d.totalViews.toLocaleString();
+  document.getElementById('statVisitors').textContent = d.uniqueVisitors.toLocaleString();
+  if (d.lastReset) {
+    document.getElementById('analyticsResetDate').textContent = 'Last reset: ' + new Date(d.lastReset).toLocaleDateString();
+  }
+
+  const body = document.getElementById('analyticsBody');
+  if (!d.products.length) {
+    body.innerHTML = `<div class="analytics-empty">No analytics recorded yet. Share your store and check back!</div>`;
+    return;
+  }
+
+  const maxScore = Math.max(...d.products.map(p => (p.views || 0)), 1);
+  body.innerHTML = `
+    <table class="analytics-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Product</th>
+          <th>Views</th>
+          <th>Popularity</th>
+          <th>Last Viewed</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${d.products.map(p => {
+          const score = (p.views || 0);
+          return `
+          <tr>
+            <td>${p.image ? `<img class="at-img" src="${p.image}" alt=""/>` : `<div class="at-img" style="display:flex;align-items:center;justify-content:center;font-size:1.2rem">📦</div>`}</td>
+            <td>
+              <div class="at-name">${esc(p.name)}</div>
+              ${p.price != null ? `<div class="at-price">$${parseFloat(p.price).toFixed(2)}</div>` : ''}
+            </td>
+            <td><span class="at-views">${(p.views || 0).toLocaleString()}</span></td>
+            <td>
+              <div class="at-bar-wrap">
+                <div class="at-bar" style="width:${Math.round((score / maxScore) * 100)}%"></div>
+              </div>
+            </td>
+            <td><div class="at-date">${p.lastSeen ? new Date(p.lastSeen).toLocaleDateString() : '—'}</div></td>
+          </tr>
+        `; }).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function renderVisitorLog() {
+  const d = analyticsData;
+  const body = document.getElementById('visitorLogBody');
+  const hideMe = document.getElementById('hideMyViews') && document.getElementById('hideMyViews').checked;
+  let log = d.visitorLog || [];
+  if (hideMe && myIp) log = log.filter(e => e.ip !== myIp);
+
+  if (!log.length) {
+    body.innerHTML = `<div class="analytics-empty">${hideMe ? 'No other visitors recorded yet.' : 'No visits recorded yet.'}</div>`;
+    return;
+  }
+
+  body.innerHTML = `
+    <div style="overflow-x:auto">
+    <table class="vl-table">
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>IP Address</th>
+          <th>Device</th>
+          <th>OS</th>
+          <th>Browser</th>
+          <th>Product Viewed</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${log.map(e => {
+          const isMe = myIp && e.ip === myIp;
+          const dt = new Date(e.timestamp);
+          const timeStr = dt.toLocaleDateString() + ' ' + dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          return `
+          <tr>
+            <td class="vl-muted" style="white-space:nowrap">${timeStr}</td>
+            <td>
+              <span class="vl-ip">${esc(e.ip)}</span>
+              ${isMe ? '<span class="vl-you">YOU</span>' : ''}
+            </td>
+            <td>${esc(e.deviceType || '—')}</td>
+            <td class="vl-muted">${esc(e.os || '—')}</td>
+            <td class="vl-muted">${esc(e.browser || '—')}</td>
+            <td>${esc(e.productName || e.productId || '—')}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+    </div>
+  `;
+}
+
+function renderLogs() {
+  const body = document.getElementById('logsBody');
+  const logs = Array.isArray(logsData) ? logsData : [];
+
+  if (!logs.length) {
+    body.innerHTML = `<div class="analytics-empty">No crash or error logs recorded yet.</div>`;
+    return;
+  }
+
+  body.innerHTML = `
+    <div style="overflow-x:auto">
+    <table class="log-table">
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Level</th>
+          <th>Category</th>
+          <th>Message</th>
+          <th>Details</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${logs.map(entry => {
+          const dt = entry.timestamp ? new Date(entry.timestamp) : null;
+          const timeStr = dt && !Number.isNaN(dt.getTime())
+            ? dt.toLocaleDateString() + ' ' + dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            : '—';
+          const details = entry.details ? esc(JSON.stringify(entry.details, null, 2)) : '';
+          return `
+          <tr>
+            <td class="vl-muted" style="white-space:nowrap">${timeStr}</td>
+            <td><span class="log-level ${esc(entry.level || 'info')}">${esc(entry.level || 'info')}</span></td>
+            <td class="log-category">${esc(entry.category || 'general')}</td>
+            <td class="log-message">${esc(entry.message || '—')}</td>
+            <td><pre class="log-details">${details || '—'}</pre></td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+    </div>
+  `;
+}
+
+async function resetAnalytics() {
+  if (!confirm('Reset all analytics? This cannot be undone.')) return;
+  await adminFetch('/api/analytics/reset', { method: 'POST' });
+  showToast('📊 Analytics reset.');
+  loadAnalytics();
+}
+
+// ── Settings ─────────────────────────────────────────────────────
+async function loadSettings() {
+  const res = await adminFetch('/api/settings');
+  settingsData = await res.json();
+  document.getElementById('publicMessage').value = settingsData.publicMessage || '';
+  document.getElementById('wallpaperUrl').value = settingsData.wallpaperUrl || '';
+  updateSettingButtons();
+}
+
+function updateSettingButtons() {
+  document.getElementById('storeOpenBtn').classList.toggle('active', settingsData.storeOpen);
+  document.getElementById('storeClosedBtn').classList.toggle('active', !settingsData.storeOpen);
+  document.getElementById('frostedOnBtn').classList.toggle('active', settingsData.frostedOverlay);
+  document.getElementById('frostedOffBtn').classList.toggle('active', !settingsData.frostedOverlay);
+  document.getElementById('applePayOnBtn').classList.toggle('active', settingsData.enableApplePay);
+  document.getElementById('applePayOffBtn').classList.toggle('active', !settingsData.enableApplePay);
+  document.getElementById('googlePayOnBtn').classList.toggle('active', settingsData.enableGooglePay);
+  document.getElementById('googlePayOffBtn').classList.toggle('active', !settingsData.enableGooglePay);
+  document.getElementById('debugFakeOnBtn').classList.toggle('active', settingsData.debugFakePurchase === true);
+  document.getElementById('debugFakeOffBtn').classList.toggle('active', settingsData.debugFakePurchase !== true);
+}
+
+function toggleSetting(key, value) {
+  settingsData = { ...settingsData, [key]: value };
+  updateSettingButtons();
+}
+
+async function saveSettings() {
+  const body = {
+    storeOpen: settingsData.storeOpen,
+    publicMessage: document.getElementById('publicMessage').value.trim(),
+    wallpaperUrl: document.getElementById('wallpaperUrl').value.trim(),
+    frostedOverlay: settingsData.frostedOverlay,
+    enableApplePay: settingsData.enableApplePay,
+    enableGooglePay: settingsData.enableGooglePay,
+    debugFakePurchase: settingsData.debugFakePurchase === true
+  };
+  const res = await adminFetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const data = await res.json();
+  if (data.success) {
+    showToast('✅ Settings saved!');
+    settingsData = { ...settingsData, ...body };
+    updateSettingButtons();
+  } else {
+    showToast('❌ Save failed.');
+  }
+}
+
+// ── Contact ───────────────────────────────────────────────────────
+async function loadContact() {
+  const res = await adminFetch('/api/contact');
+  const c   = await res.json();
+  document.getElementById('cEmail').value     = c.email     || '';
+  document.getElementById('cPhone').value     = c.phone     || '';
+  document.getElementById('cInstagram').value = c.instagram || '';
+  document.getElementById('cEtsy').value      = c.etsy      || '';
+  document.getElementById('cCustom').value    = c.custom    || '';
+}
+
+async function saveContact() {
+  const body = {
+    email:     document.getElementById('cEmail').value.trim(),
+    phone:     document.getElementById('cPhone').value.trim(),
+    instagram: document.getElementById('cInstagram').value.trim(),
+    etsy:      document.getElementById('cEtsy').value.trim(),
+    custom:    document.getElementById('cCustom').value.trim()
+  };
+  const res  = await adminFetch('/api/contact', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const data = await res.json();
+  if (data.success) showToast('✅ Contact info saved!');
+  else showToast('❌ Save failed.');
+}
+
+// ── Toast ─────────────────────────────────────────────────────────
+function showToast(msg, duration = 3000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), duration);
+}
+
+// ── Escape HTML ───────────────────────────────────────────────────
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Modal backdrop close ──────────────────────────────────────────
+document.getElementById('editModal').addEventListener('click', e => { if (e.target === document.getElementById('editModal')) closeEdit(); });
+document.getElementById('libraryModal').addEventListener('click', e => { if (e.target === document.getElementById('libraryModal')) closeLibrary(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeCropModal(); closeEdit(); closeLibrary(); } });
+
+// ════════════════════════════════════════════════════════════
+// CROP & ROTATE ENGINE
+// ════════════════════════════════════════════════════════════
+let cropCtx     = null;
+let cropImage   = null;          // original HTMLImageElement loaded into editor
+let cropOrigSrc = '';            // original src before any edits
+let cropRotDeg  = 0;             // cumulative rotation (0/90/180/270)
+let cropFlipH   = false;
+let cropFlipV   = false;
+let cropMode    = false;         // whether crop rectangle is active
+let cropAspect  = 'free';        // 'free' | numeric ratio (w/h)
+let cropRect    = {x:0,y:0,w:0,h:0}; // in canvas-display coords (0..1 fractional)
+let cropDrag    = null;          // {type:'new'|'move'|'nw'|'ne'|'sw'|'se', startX, startY, origRect}
+let cropCallback = null;         // function(dataUrl) called on apply
+
+function openCropForThumb(thumbEl) {
+  const img = thumbEl.querySelector('img');
+  const src = img.src;
+  cropCallback = (dataUrl) => {
+    img.src = dataUrl;
+    thumbEl.dataset.originalSrc = dataUrl;
+    // If this was a file upload, we need to update the file data.
+    // We store the edited dataUrl on the element for FormData collection.
+    thumbEl.dataset.editedSrc = dataUrl;
+  };
+  openCropModal(src);
+}
+
+function openCropForKeepImage(idx) {
+  const src = keepImages[idx];
+  cropCallback = (dataUrl) => {
+    keepImages[idx] = dataUrl;
+    renderSortableImages();
+  };
+  openCropModal(src);
+}
+
+function openCropModal(src) {
+  cropOrigSrc = src;
+  cropRotDeg  = 0;
+  cropFlipH   = false;
+  cropFlipV   = false;
+  cropMode    = false;
+  cropAspect  = 'free';
+  cropRect    = {x:0.1, y:0.1, w:0.8, h:0.8};
+  cropDrag    = null;
+
+  document.getElementById('cropModeBtn').textContent = '\u25A1 Enable Crop';
+  document.getElementById('cropModeBtn').classList.remove('active');
+  document.getElementById('aspectRow').style.display = 'none';
+  document.getElementById('cropSelection').style.display = 'none';
+  document.querySelectorAll('.aspect-chip').forEach(c => c.classList.toggle('active', c.dataset.ratio === 'free'));
+
+  const modal = document.getElementById('cropModal');
+  modal.classList.add('open');
+
+  const img = new Image();
+  img.onload = () => {
+    cropImage = img;
+    requestAnimationFrame(renderCropCanvas);
+  };
+  img.crossOrigin = 'anonymous';
+  img.src = src;
+
+  setupCropEvents();
+}
+
+function closeCropModal() {
+  document.getElementById('cropModal').classList.remove('open');
+  teardownCropEvents();
+}
+
+// ── Canvas rendering ─────────────────────────────────────────────
+function renderCropCanvas() {
+  const stage  = document.getElementById('cropStage');
+  const canvas = document.getElementById('cropCanvas');
+  if (!cropImage) return;
+
+  // Determine display size
+  const W = stage.clientWidth  || 640;
+  const H = stage.clientHeight || 480;
+  canvas.width  = W;
+  canvas.height = H;
+
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#111';
+  ctx.fillRect(0, 0, W, H);
+
+  // Compute rotated natural size
+  const rotated = cropRotDeg % 180 !== 0;
+  const srcW = rotated ? cropImage.naturalHeight : cropImage.naturalWidth;
+  const srcH = rotated ? cropImage.naturalWidth  : cropImage.naturalHeight;
+
+  const scale = Math.min(W / srcW, H / srcH) * 0.96;
+  const dw = srcW * scale;
+  const dh = srcH * scale;
+  const dx = (W - dw) / 2;
+  const dy = (H - dh) / 2;
+
+  ctx.save();
+  ctx.translate(W/2, H/2);
+  ctx.rotate(cropRotDeg * Math.PI / 180);
+  if (cropFlipH) ctx.scale(-1, 1);
+  if (cropFlipV) ctx.scale(1, -1);
+  // Draw image scaled to fit the stage (scale was computed above but missing from drawImage)
+  ctx.drawImage(cropImage, -dw/2, -dh/2, dw, dh);
+  ctx.restore();
+
+  // Store display rect for pointer math
+  canvas._imgRect = {x: dx, y: dy, w: dw, h: dh};
+
+  // Draw crop overlay if active
+  if (cropMode) {
+    updateCropSelectionEl(dx, dy, dw, dh);
+  }
+}
+
+function updateCropSelectionEl(imgX, imgY, imgW, imgH) {
+  const sel = document.getElementById('cropSelection');
+  const stage = document.getElementById('cropStage');
+  const stageRect = stage.getBoundingClientRect();
+
+  // cropRect coords are fractions of the image display area
+  const px = imgX + cropRect.x * imgW;
+  const py = imgY + cropRect.y * imgH;
+  const pw = cropRect.w * imgW;
+  const ph = cropRect.h * imgH;
+
+  sel.style.display = '';
+  sel.style.left   = px + 'px';
+  sel.style.top    = py + 'px';
+  sel.style.width  = pw + 'px';
+  sel.style.height = ph + 'px';
+}
+
+// ── Rotation & flip ───────────────────────────────────────────────
+function cropRotate(deg) {
+  cropRotDeg = ((cropRotDeg + deg) % 360 + 360) % 360;
+  requestAnimationFrame(renderCropCanvas);
+}
+
+function cropFlip(axis) {
+  if (axis === 'h') cropFlipH = !cropFlipH;
+  else              cropFlipV = !cropFlipV;
+  requestAnimationFrame(renderCropCanvas);
+}
+
+function cropReset() {
+  cropRotDeg = 0; cropFlipH = false; cropFlipV = false;
+  cropMode   = false; cropRect = {x:0.1,y:0.1,w:0.8,h:0.8};
+  document.getElementById('cropModeBtn').textContent = '\u25A1 Enable Crop';
+  document.getElementById('cropModeBtn').classList.remove('active');
+  document.getElementById('aspectRow').style.display = 'none';
+  document.getElementById('cropSelection').style.display = 'none';
+  requestAnimationFrame(renderCropCanvas);
+}
+
+function toggleCropMode() {
+  cropMode = !cropMode;
+  const btn = document.getElementById('cropModeBtn');
+  if (cropMode) {
+    btn.textContent = '\u25A0 Crop Active';
+    btn.classList.add('active');
+    document.getElementById('aspectRow').style.display = '';
+    cropRect = {x:0.1, y:0.1, w:0.8, h:0.8};
+  } else {
+    btn.textContent = '\u25A1 Enable Crop';
+    btn.classList.remove('active');
+    document.getElementById('aspectRow').style.display = 'none';
+    document.getElementById('cropSelection').style.display = 'none';
+  }
+  requestAnimationFrame(renderCropCanvas);
+}
+
+function setAspect(el, ratio) {
+  cropAspect = ratio;
+  document.querySelectorAll('.aspect-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  if (ratio !== 'free') {
+    // Adjust height to match aspect while keeping x,w
+    const canvas = document.getElementById('cropCanvas');
+    const imgRect = canvas._imgRect || {x:0,y:0,w:canvas.width,h:canvas.height};
+    const pxW  = cropRect.w * imgRect.w;
+    const pxH  = pxW / parseFloat(ratio);
+    cropRect.h = pxH / imgRect.h;
+    if (cropRect.y + cropRect.h > 1) {
+      cropRect.y = 1 - cropRect.h;
+    }
+    if (cropRect.h > 1) { cropRect.h = 1; cropRect.y = 0; }
+  }
+  requestAnimationFrame(renderCropCanvas);
+}
+
+// ── Apply ─────────────────────────────────────────────────────────
+function cropApply() {
+  if (!cropImage) return;
+
+  const offscreen = document.createElement('canvas');
+  const iw = cropImage.naturalWidth;
+  const ih = cropImage.naturalHeight;
+
+  // Step 1: rotate + flip onto offscreen
+  const rotated = cropRotDeg % 180 !== 0;
+  offscreen.width  = rotated ? ih : iw;
+  offscreen.height = rotated ? iw : ih;
+  const oc = offscreen.getContext('2d');
+  oc.translate(offscreen.width/2, offscreen.height/2);
+  oc.rotate(cropRotDeg * Math.PI / 180);
+  if (cropFlipH) oc.scale(-1, 1);
+  if (cropFlipV) oc.scale(1, -1);
+  oc.drawImage(cropImage, -iw/2, -ih/2);
+
+  let resultCanvas = offscreen;
+
+  // Step 2: crop if active
+  if (cropMode) {
+    const cx = Math.max(0, cropRect.x) * offscreen.width;
+    const cy = Math.max(0, cropRect.y) * offscreen.height;
+    const cw = Math.min(1 - Math.max(0, cropRect.x), cropRect.w) * offscreen.width;
+    const ch = Math.min(1 - Math.max(0, cropRect.y), cropRect.h) * offscreen.height;
+
+    const cropped = document.createElement('canvas');
+    cropped.width  = Math.max(1, Math.round(cw));
+    cropped.height = Math.max(1, Math.round(ch));
+    cropped.getContext('2d').drawImage(offscreen, cx, cy, cw, ch, 0, 0, cropped.width, cropped.height);
+    resultCanvas = cropped;
+  }
+
+  const dataUrl = resultCanvas.toDataURL('image/jpeg', 0.92);
+  if (cropCallback) cropCallback(dataUrl);
+  closeCropModal();
+  showToast('✅ Image updated — save your product to keep changes.');
+}
+
+// ── Pointer / drag events for crop rectangle ──────────────────────
+function setupCropEvents() {
+  const stage = document.getElementById('cropStage');
+  stage.addEventListener('pointerdown', onCropPointerDown);
+  window.addEventListener('pointermove', onCropPointerMove);
+  window.addEventListener('pointerup',   onCropPointerUp);
+}
+function teardownCropEvents() {
+  const stage = document.getElementById('cropStage');
+  stage.removeEventListener('pointerdown', onCropPointerDown);
+  window.removeEventListener('pointermove', onCropPointerMove);
+  window.removeEventListener('pointerup',   onCropPointerUp);
+}
+
+function stageCoords(e) {
+  const stage  = document.getElementById('cropStage');
+  const canvas = document.getElementById('cropCanvas');
+  const sr     = stage.getBoundingClientRect();
+  const px     = e.clientX - sr.left;
+  const py     = e.clientY - sr.top;
+  const ir     = canvas._imgRect || {x:0,y:0,w:canvas.width,h:canvas.height};
+  // Return fractional coords relative to image display area
+  return {
+    fx: (px - ir.x) / ir.w,
+    fy: (py - ir.y) / ir.h,
+    px, py, ir
+  };
+}
+
+function onCropPointerDown(e) {
+  if (!cropMode) return;
+  e.preventDefault();
+  const {fx, fy} = stageCoords(e);
+
+  // Check if click is on a handle
+  const handle = e.target.dataset.handle;
+  if (handle) {
+    cropDrag = { type: handle, startX: fx, startY: fy, origRect: {...cropRect} };
+    return;
+  }
+
+  // Check if inside selection (move)
+  if (fx >= cropRect.x && fx <= cropRect.x + cropRect.w &&
+      fy >= cropRect.y && fy <= cropRect.y + cropRect.h) {
+    cropDrag = { type: 'move', startX: fx, startY: fy, origRect: {...cropRect} };
+    return;
+  }
+
+  // New selection
+  cropDrag = { type: 'new', startX: fx, startY: fy, origRect: {...cropRect} };
+  cropRect = { x: fx, y: fy, w: 0, h: 0 };
+}
+
+function onCropPointerMove(e) {
+  if (!cropDrag) return;
+  e.preventDefault();
+  const {fx, fy} = stageCoords(e);
+  const dx = fx - cropDrag.startX;
+  const dy = fy - cropDrag.startY;
+  const or = cropDrag.origRect;
+  const aspectRatio = cropAspect === 'free' ? null : parseFloat(cropAspect);
+  const canvas = document.getElementById('cropCanvas');
+  const ir = canvas._imgRect || {w:1,h:1};
+
+  switch (cropDrag.type) {
+    case 'new': {
+      let nx = Math.min(cropDrag.startX, fx);
+      let ny = Math.min(cropDrag.startY, fy);
+      let nw = Math.abs(dx);
+      let nh = Math.abs(dy);
+      if (aspectRatio) nh = nw * ir.w / (ir.h * aspectRatio);
+      cropRect = { x: clamp01(nx), y: clamp01(ny), w: clamp01(nw), h: clamp01(nh) };
+      break;
+    }
+    case 'move': {
+      let nx = clamp(or.x + dx, 0, 1 - or.w);
+      let ny = clamp(or.y + dy, 0, 1 - or.h);
+      cropRect = { x: nx, y: ny, w: or.w, h: or.h };
+      break;
+    }
+    case 'se': {
+      let nw = clamp01(or.w + dx);
+      let nh = aspectRatio ? nw * ir.w / (ir.h * aspectRatio) : clamp01(or.h + dy);
+      cropRect = { x: or.x, y: or.y, w: nw, h: nh };
+      break;
+    }
+    case 'sw': {
+      let nw = clamp01(or.w - dx);
+      let nh = aspectRatio ? nw * ir.w / (ir.h * aspectRatio) : clamp01(or.h + dy);
+      cropRect = { x: clamp01(or.x + (or.w - nw)), y: or.y, w: nw, h: nh };
+      break;
+    }
+    case 'ne': {
+      let nw = clamp01(or.w + dx);
+      let nh = aspectRatio ? nw * ir.w / (ir.h * aspectRatio) : clamp01(or.h - dy);
+      cropRect = { x: or.x, y: clamp01(or.y + (or.h - nh)), w: nw, h: nh };
+      break;
+    }
+    case 'nw': {
+      let nw = clamp01(or.w - dx);
+      let nh = aspectRatio ? nw * ir.w / (ir.h * aspectRatio) : clamp01(or.h - dy);
+      cropRect = { x: clamp01(or.x + (or.w - nw)), y: clamp01(or.y + (or.h - nh)), w: nw, h: nh };
+      break;
+    }
+  }
+  requestAnimationFrame(renderCropCanvas);
+}
+
+function onCropPointerUp() { cropDrag = null; }
+
+function clamp(v, mn, mx) { return Math.max(mn, Math.min(mx, v)); }
+function clamp01(v) { return clamp(v, 0, 1); }
+
+function dataUrlToBlob(dataUrl) {
+  return new Promise(resolve => {
+    const [header, data] = dataUrl.split(',');
+    const mime = header.match(/:(.*?);/)[1];
+    const binary = atob(data);
+    const arr = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) arr[i] = binary.charCodeAt(i);
+    resolve(new Blob([arr], {type: mime}));
+  });
+}
+
+// ── Init ──────────────────────────────────────────────────────────
+loadMaterials();
+loadProducts();
+</script>
+</body>
+</html>

@@ -1,0 +1,2224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title id="pageTitle">Miles To Print</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <!-- Square.js will be loaded dynamically based on environment -->
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0f0e0c; --surface: #1a1916; --surface2: #232220;
+      --gold: #c9a84c; --gold-light: #e8c97a;
+      --text: #f0ece4; --muted: #888580; --border: #2e2c28;
+    }
+    body {
+      background:
+        radial-gradient(circle at top left, rgba(201,168,76,0.14), transparent 36%),
+        radial-gradient(circle at top right, rgba(255,255,255,0.06), transparent 28%),
+        linear-gradient(180deg, #11100d 0%, #0b0a09 100%);
+      color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; position: relative;
+      overflow-x: hidden;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 0 2rem; display: flex; align-items: center; justify-content: space-between;
+      height: 72px; position: sticky; top: 0; z-index: 100;
+    }
+    .logo { font-family: 'Playfair Display', serif; font-size: 1.6rem; color: var(--gold); letter-spacing: 0.04em; cursor: pointer; }
+    .header-controls { display: flex; align-items: center; gap: 1rem; }
+    header nav { display: flex; gap: 1.5rem; align-items: center; }
+    header nav a, .nav-btn {
+      color: var(--muted); text-decoration: none; font-size: 0.85rem;
+      letter-spacing: 0.08em; text-transform: uppercase; transition: color 0.2s;
+      background: none; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif;
+      padding: 0.65rem 0.9rem; border-radius: 10px;
+    }
+    header nav a:hover, .nav-btn:hover, .nav-btn.active { color: var(--gold); }
+    .nav-btn.active { color: var(--gold); }
+    .store-banner { display: none; max-width: 1200px; margin: 1rem auto 0; padding: 0.95rem 1.25rem; border-radius: 12px; background: rgba(201,168,76,0.12); border: 1px solid rgba(201,168,76,0.25); color: var(--text); text-align: center; font-size: 0.95rem; }
+    .btn-add-cart { width: 100%; margin-top: 0.85rem; background: transparent; color: var(--gold); border: 1px solid var(--gold); border-radius: 10px; padding: 0.85rem; cursor: pointer; font-size: 0.95rem; }
+    .btn-add-cart:hover { background: var(--gold); color: #0f0e0c; }
+
+
+
+    /* ── Pages ── */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── Hero ── */
+    .hero {
+      text-align: center; padding: 88px 2rem 58px; position: relative; isolation: isolate;
+    }
+    .hero::before, .hero::after {
+      content: ''; position: absolute; inset: auto; border-radius: 999px; filter: blur(8px); opacity: 0.75; pointer-events: none;
+    }
+    .hero::before { width: 220px; height: 220px; background: rgba(201,168,76,0.12); top: 18px; left: 8%; }
+    .hero::after  { width: 280px; height: 280px; background: rgba(255,255,255,0.05); top: 0; right: 5%; }
+    .hero > * { position: relative; z-index: 1; }
+    .hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(2.2rem, 5vw, 4rem); color: var(--gold-light); margin-bottom: 1rem; line-height: 1.15; }
+    .hero p  { color: var(--muted); font-size: 1.05rem; max-width: 560px; margin: 0 auto; }
+
+    .store-section { max-width: 1280px; margin: 0 auto 46px; padding: 0 0 14px; }
+    .section-head {
+      display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; flex-wrap: wrap;
+      margin: 0 auto 1rem; padding: 0 2rem;
+    }
+    .section-copy { max-width: 720px; }
+    .section-title { font-family: 'Playfair Display', serif; font-size: 1.55rem; color: var(--gold-light); margin-bottom: 0.35rem; }
+    .section-subtitle { color: var(--muted); font-size: 0.94rem; line-height: 1.6; }
+    .section-chip {
+      font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold);
+      padding: 0.6rem 0.8rem; border-radius: 999px; border: 1px solid rgba(201,168,76,0.22);
+      background: rgba(201,168,76,0.07); white-space: nowrap;
+    }
+    .section-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.25rem; padding: 0 2rem; }
+
+    /* ── Grid ── */
+    .section-label { text-align: center; font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin: 3rem 0 1.5rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; max-width: 1200px; margin: 0 auto 80px; padding: 0 2rem; }
+
+    /* ── Product Card ── */
+    .card {
+      background: linear-gradient(180deg, rgba(26,25,22,0.95), rgba(20,19,17,0.96));
+      border: 1px solid var(--border); border-radius: 18px;
+      overflow: hidden; cursor: pointer; transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s, background 0.25s;
+      position: relative;
+    }
+    .card:hover { transform: translateY(-5px); border-color: var(--gold); box-shadow: 0 16px 46px rgba(201,168,76,0.14); }
+    .card.is-sold-out { opacity: 0.72; }
+    .card-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; background: var(--surface2); display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 2.5rem; overflow: hidden; position: relative; }
+    .card-img img { width: 100%; height: 100%; object-fit: cover; }
+    .card-badge-row { position: absolute; top: 12px; left: 12px; display: flex; flex-wrap: wrap; gap: 0.45rem; }
+    .card-badge { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.45rem 0.65rem; border-radius: 999px; background: rgba(15,14,12,0.8); color: var(--text); border: 1px solid rgba(255,255,255,0.08); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; backdrop-filter: blur(8px); }
+    .card-badge.gold { color: var(--gold-light); border-color: rgba(201,168,76,0.3); }
+    .card-body { padding: 1.25rem; }
+    .card-name { font-family: 'Playfair Display', serif; font-size: 1.15rem; margin-bottom: 0.35rem; color: var(--text); }
+    .card-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.5; display: -webkit-box; line-clamp: 2; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 0.8rem; }
+    .card-meta { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; margin-bottom: 0.85rem; flex-wrap: wrap; }
+    .card-price { font-size: 1.1rem; font-weight: 500; color: var(--gold); }
+    .card-stock { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+    .card-stock strong { color: var(--gold-light); }
+    .card-cta { display: grid; gap: 0.6rem; }
+    .card-link {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; width: 100%;
+      margin-top: 0.85rem; text-decoration: none; text-align: center; background: transparent; color: var(--gold);
+      border: 1px solid var(--gold); border-radius: 10px; padding: 0.85rem; cursor: pointer; font-size: 0.95rem;
+    }
+    .card-link:hover { background: var(--gold); color: #0f0e0c; }
+    .card-link.disabled { pointer-events: none; opacity: 0.5; }
+
+    /* ── Empty state ── */
+    .empty { text-align: center; padding: 80px 2rem; color: var(--muted); grid-column: 1/-1; }
+    .empty span { font-size: 3rem; display: block; margin-bottom: 1rem; }
+
+    /* ── Modal ── */
+    .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 200; align-items: center; justify-content: center; padding: 1rem; }
+    .modal-bg.open { display: flex; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+      max-width: 780px; width: 100%; max-height: 90vh; overflow-y: auto; position: relative;
+      animation: fadeUp 0.25s ease;
+    }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+    .modal-close {
+      position: absolute; top: 1rem; right: 1rem; background: var(--surface2);
+      border: 1px solid var(--border); color: var(--text); width: 36px; height: 36px;
+      border-radius: 50%; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s; z-index: 10;
+    }
+    .modal-close:hover { background: #3a3830; }
+
+    /* ── Image gallery ── */
+    .gallery { position: relative; background: var(--surface2); border-radius: 12px 12px 0 0; overflow: hidden; touch-action: pan-y; }
+    .gallery::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(105deg, rgba(255,255,255,0) 22%, rgba(255,255,255,0.12) 40%, rgba(255,255,255,0) 58%);
+      transform: translateX(-120%);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    .gallery.is-loading::after {
+      opacity: 1;
+      animation: gallerySweep 1.15s ease-in-out infinite;
+    }
+    @keyframes gallerySweep {
+      0% { transform: translateX(-120%); }
+      100% { transform: translateX(120%); }
+    }
+    .gallery-main {
+      width: 100%; height: 360px; object-fit: contain; display: block;
+      background: var(--surface2); transition: opacity 0.2s ease;
+      opacity: 1; touch-action: pan-y;
+    }
+    .gallery.is-loading .gallery-main { opacity: 0.72; }
+    .gallery-main.loaded { opacity: 1; }
+    .gallery-retry {
+      position: absolute;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 3;
+      border: 1px solid rgba(201,168,76,0.45);
+      background: rgba(15,14,12,0.84);
+      color: var(--gold-light);
+      border-radius: 999px;
+      padding: 0.45rem 0.75rem;
+      font-size: 0.78rem;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      display: none;
+    }
+    .gallery-retry:hover { background: rgba(26,25,22,0.95); }
+    .gallery-placeholder { width: 100%; height: 360px; display: flex; align-items: center; justify-content: center; font-size: 4rem; color: var(--muted); }
+    .gallery-thumbs { display: flex; gap: 8px; padding: 10px; overflow-x: auto; background: var(--bg); }
+    .gallery-thumbs img { width: 64px; height: 64px; object-fit: cover; border-radius: 6px; cursor: pointer; border: 2px solid transparent; transition: border-color 0.2s; flex-shrink: 0; }
+    .gallery-thumbs img.active { border-color: var(--gold); }
+    .gallery-nav {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      background: rgba(0,0,0,0.5); border: none; color: white; width: 40px; height: 40px;
+      border-radius: 50%; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+    }
+    .gallery-nav:hover { background: rgba(0,0,0,0.8); }
+    .gallery-nav.prev { left: 12px; }
+    .gallery-nav.next { right: 12px; }
+
+    .modal-info { padding: 1.8rem; }
+    .modal-name  { font-family: 'Playfair Display', serif; font-size: 1.7rem; margin-bottom: 0.5rem; }
+    .modal-price { font-size: 1.4rem; color: var(--gold); font-weight: 500; margin-bottom: 1rem; }
+    .modal-desc  { color: var(--muted); line-height: 1.7; font-size: 0.95rem; }
+    .modal-meta { display: flex; flex-wrap: wrap; gap: 0.55rem; margin-bottom: 1rem; }
+    .modal-stock { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.42rem 0.6rem; border-radius: 999px; background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.2); color: var(--gold-light); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; }
+
+    /* ── Contact Page ── */
+    .contact-page { max-width: 600px; margin: 0 auto; padding: 4rem 2rem 6rem; }
+    .contact-page h1 { font-family: 'Playfair Display', serif; font-size: 2.2rem; color: var(--gold-light); margin-bottom: 0.5rem; }
+    .contact-page .sub { color: var(--muted); margin-bottom: 3rem; font-size: 0.95rem; }
+    .contact-items { display: flex; flex-direction: column; gap: 1.2rem; }
+    .contact-item {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 1.2rem 1.5rem; display: flex; align-items: center; gap: 1rem;
+    }
+    .contact-item a { color: var(--gold); text-decoration: none; font-size: 1rem; }
+    .contact-item a:hover { color: var(--gold-light); text-decoration: underline; }
+    .contact-item .ci-icon { font-size: 1.5rem; flex-shrink: 0; }
+    .contact-item .ci-label { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.2rem; }
+    .contact-item .ci-value { color: var(--text); font-size: 0.95rem; }
+    .contact-empty { text-align: center; padding: 4rem 2rem; color: var(--muted); }
+    .contact-empty span { font-size: 3rem; display: block; margin-bottom: 1rem; }
+    .custom-html { margin-top: 2rem; color: var(--text); line-height: 1.7; }
+    .custom-html a { color: var(--gold); }
+
+    /* ── Footer ── */
+    footer { border-top: 1px solid var(--border); text-align: center; padding: 2rem; color: var(--muted); font-size: 0.8rem; }
+
+    /* ── Payment spinner ── */
+    .pay-spinner {
+      width: 48px; height: 48px; border: 3px solid var(--border);
+      border-top-color: var(--gold); border-radius: 50%;
+      animation: spin 0.8s linear infinite; margin: 0 auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Toast animations ── */
+    @keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes slideDown { from { opacity:1; transform:translateY(0); } to { opacity:0; transform:translateY(20px); } }
+
+    /* ── Input focus ── */
+    input:focus { outline: none; border-color: var(--gold) !important; }
+
+    /* ── Wallet buttons ── */
+    #apple-pay-button,
+    #google-pay-button {
+      min-height: 48px;
+    }
+    apple-pay-button,
+    google-pay-button {
+      --apple-pay-button-width: 100%;
+      --apple-pay-button-height: 48px;
+      --apple-pay-button-border-radius: 10px;
+      --apple-pay-button-padding: 0;
+      --apple-pay-button-box-sizing: border-box;
+    }
+
+    .mobile-menu-toggle {
+      display: none;
+      border: 1px solid rgba(255,255,255,0.14);
+      color: var(--text);
+      background: rgba(255,255,255,0.04);
+      border-radius: 999px;
+      padding: 0.65rem 0.85rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+      align-self: center;
+    }
+    .mobile-menu-toggle:hover {
+      background: rgba(255,255,255,0.08);
+    }
+
+    .network-status {
+      position: fixed;
+      left: 50%;
+      bottom: 14px;
+      transform: translateX(-50%);
+      z-index: 380;
+      display: none;
+      font-size: 0.78rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.45rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(15,14,12,0.86);
+      color: var(--gold-light);
+      backdrop-filter: blur(8px);
+    }
+
+    .network-status.show { display: inline-flex; }
+    .network-status.offline {
+      color: #ffd6a1;
+      border-color: rgba(255,180,100,0.5);
+    }
+
+    body.low-power .hero::before,
+    body.low-power .hero::after,
+    body.low-power .gallery::after {
+      display: none;
+    }
+
+    body.low-power .card:hover {
+      transform: none;
+      box-shadow: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important;
+        transition-duration: 0.01ms !important;
+        transition-delay: 0ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    @media (max-width: 760px) {
+      header {
+        flex-wrap: wrap;
+        gap: 0.65rem;
+        padding: 0.75rem 1rem 0.5rem;
+        height: auto;
+        align-items: flex-start;
+      }
+      .logo {
+        font-size: 1.3rem;
+      }
+      .header-controls {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      header nav {
+        display: none;
+        flex-direction: column;
+        gap: 0.65rem;
+        width: 100%;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.28s ease;
+      }
+      header.nav-open nav {
+        display: flex;
+        max-height: 640px;
+      }
+      header nav a,
+      .nav-btn {
+        width: 100%;
+        text-align: left;
+        white-space: normal;
+        min-width: 0;
+        font-size: 0.88rem;
+        padding: 0.7rem 0.9rem;
+      }
+      header nav a {
+        display: inline-flex;
+      }
+      .mobile-menu-toggle {
+        display: inline-flex;
+      }
+      .hero {
+        padding: 60px 1rem 34px;
+      }
+      .hero h1 { font-size: clamp(2rem, 10vw, 3rem); }
+      .hero p { max-width: 100%; }
+      .section-head, .section-grid { padding: 0 1rem; }
+      .section-head { align-items: flex-start; }
+      .section-grid { gap: 1rem; }
+      .modal { max-width: 100%; border-radius: 0; max-height: 100vh; }
+    }
+
+    @media (max-width: 640px) {
+      header nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.55rem; }
+      header nav a, .nav-btn { min-width: 0; width: 100%; justify-content: center; }
+      .header-controls { width: 100%; }
+      .section-grid { grid-template-columns: 1fr; gap: 0.85rem; }
+      .card { border-radius: 14px; }
+      .card-img { min-height: 220px; }
+      .card-body { padding: 0.95rem; }
+      .card-name { font-size: 1rem; }
+      .card-desc { font-size: 0.82rem; line-clamp: 1; -webkit-line-clamp: 1; }
+      .card-meta { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+      .card-price { font-size: 1rem; }
+      .card-link { font-size: 0.9rem; padding: 0.75rem; }
+      .hero { padding: 42px 0.85rem 28px; }
+      .hero h1 { font-size: clamp(1.7rem, 10vw, 2.4rem); }
+      .hero p { font-size: 0.92rem; }
+      .section-head { gap: 0.75rem; }
+      .section-title { font-size: 1.2rem; }
+      .section-subtitle { font-size: 0.85rem; }
+      .section-grid, .section-head { padding: 0 0.85rem; }
+      .gallery-main { height: 240px; }
+      .gallery-placeholder { height: 240px; }
+      .gallery-thumbs { padding: 8px; }
+      .gallery-thumbs img { width: 50px; height: 50px; }
+      .modal-info { padding: 1rem; }
+      .modal-name { font-size: 1.3rem; }
+      .modal-price { font-size: 1.1rem; }
+      .contact-page { padding: 1.8rem 0.85rem 3rem; }
+      .contact-page h1 { font-size: 1.6rem; }
+      .contact-item { padding: 1rem; }
+      footer { padding: 1.2rem 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+
+
+
+<header>
+  <div class="logo" onclick="showPage('pod')">✦ <span id="headerStoreName">Miles To Print</span></div>
+  <div class="header-controls">
+    <button class="mobile-menu-toggle" id="mobileMenuToggle" onclick="toggleMobileNav()" aria-expanded="false" aria-controls="mainNav">Menu</button>
+    <nav id="mainNav">
+      <button class="nav-btn active" id="nav-pod" onclick="handleNavClick('pod')">Print on Demand</button>
+      <button class="nav-btn" id="nav-limited" onclick="handleNavClick('limited')">Limited Time</button>
+      <button class="nav-btn" id="nav-etsy" onclick="handleNavClick('etsy')">Etsy</button>
+      <button class="nav-btn" id="nav-contact" onclick="handleNavClick('contact')">Contact</button>
+      <button class="nav-btn" id="nav-success" onclick="handleNavClick('success')" style="display:none;">Thank You</button>
+      <a href="/admin">Admin</a>
+    </nav>
+  </div>
+</header>
+
+<div class="store-banner" id="storeBanner"></div>
+<div class="network-status" id="networkStatus" role="status" aria-live="polite"></div>
+
+<!-- ── Print on Demand Page ── -->
+<div class="page active" id="page-pod">
+  <div class="hero">
+    <h1>Print on Demand</h1>
+    <p>Browse the main collection and shop directly from the store.</p>
+  </div>
+  <div class="store-section">
+    <div class="section-head">
+      <div class="section-copy">
+        <div class="section-title">Main collection</div>
+        <div class="section-subtitle">Featured products available now.</div>
+      </div>
+      <div class="section-chip">POD</div>
+    </div>
+    <div class="section-grid" id="podGrid">
+      <div class="empty"><span>🛍️</span>Loading...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Limited Time Page ── -->
+<div class="page" id="page-limited">
+  <div class="hero">
+    <h1>Limited Time</h1>
+    <p>Limited-release items with stock caps.</p>
+  </div>
+  <div class="store-section">
+    <div class="section-head">
+      <div class="section-copy">
+        <div class="section-title">Limited quantity items</div>
+        <div class="section-subtitle">Available while stock lasts.</div>
+      </div>
+      <div class="section-chip">Limited</div>
+    </div>
+    <div class="section-grid" id="limitedGrid">
+      <div class="empty"><span>⏳</span>Loading...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Etsy Page ── -->
+<div class="page" id="page-etsy">
+  <div class="hero">
+    <h1>Etsy</h1>
+    <p>Selected items that link out to Etsy.</p>
+  </div>
+  <div class="store-section">
+    <div class="section-head">
+      <div class="section-copy">
+        <div class="section-title">Etsy storefront</div>
+        <div class="section-subtitle">External listings and shop links.</div>
+      </div>
+      <div class="section-chip">External</div>
+    </div>
+    <div class="section-grid" id="etsyGrid">
+      <div class="empty"><span>🪡</span>Loading...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Contact Page ── -->
+<div class="page" id="page-contact">
+  <div class="contact-page">
+    <h1>Get in Touch</h1>
+    <p class="sub" id="contactSub">I'd love to hear from you.</p>
+    <div id="contactItems" class="contact-items"></div>
+    <div id="customHtml" class="custom-html"></div>
+  </div>
+</div>
+
+<!-- ── Thank You Page ── -->
+<div class="page" id="page-success">
+  <div class="contact-page">
+    <h1>Order confirmed</h1>
+    <p class="sub">Your payment has been received.</p>
+    <div style="margin-top:1.5rem; padding:1.5rem; background:var(--surface2); border:1px solid var(--border); border-radius:16px;">
+      <p id="success-detail" style="font-size:1.05rem; line-height:1.7; color:var(--text); margin-bottom:1rem;">
+        Thanks for shopping with Miles To Print.
+      </p>
+      <div style="font-size:0.95rem; line-height:1.6; color:var(--muted); border-top:1px solid var(--border); padding-top:1rem;">
+        <div><strong>Product:</strong> <span id="success-product">—</span></div>
+        <div><strong>Quantity:</strong> <span id="success-qty">—</span></div>
+        <div><strong>Total:</strong> <span id="success-total">—</span></div>
+      </div>
+      <p style="font-size:0.95rem; line-height:1.6; color:var(--muted); margin-top:1rem;">
+        Contact support if you need help with your order.
+      </p>
+    </div>
+    <button class="btn-add-cart" style="margin-top:1.5rem;" onclick="showPage('pod')">Continue Shopping</button>
+  </div>
+</div>
+
+<!-- Product Modal -->
+<div class="modal-bg" id="modalBg" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    <div class="gallery" id="gallery"></div>
+    <div class="modal-info">
+      <div class="modal-name"  id="mName"></div>
+      <div class="modal-price" id="mPrice"></div>
+      <div class="modal-meta" id="modalMeta"></div>
+      <div class="modal-desc"  id="mDesc"></div>
+      <div id="colorSelection" style="display:none; margin-bottom:1rem;">
+        <label style="font-size:0.75rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:0.5rem; display:block;">Choose Color</label>
+        <select id="colorSelect" style="width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); padding:0.7rem 0.9rem; font-size:0.92rem;">
+          <option value="">Select a color...</option>
+        </select>
+      </div>
+      <div id="colorSelectionSecondary" style="display:none; margin-bottom:1rem;">
+        <label style="font-size:0.75rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:0.5rem; display:block;">Choose Secondary Color</label>
+        <select id="colorSelectSecondary" style="width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); padding:0.7rem 0.9rem; font-size:0.92rem;">
+          <option value="">Select a color...</option>
+        </select>
+      </div>
+      <div id="variantSelection" style="display:none; margin-bottom:1rem;">
+        <label style="font-size:0.75rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:0.5rem; display:block;">Choose Variant</label>
+        <select id="variantSelect" style="width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); padding:0.7rem 0.9rem; font-size:0.92rem;">
+          <option value="">Select a variant...</option>
+        </select>
+      </div>
+      <button id="modalAddButton" class="btn-add-cart" onclick="event.stopPropagation(); buyNow(currentProductId)">Buy now</button>
+    </div>
+  </div>
+</div>
+
+<!-- Payment Modal -->
+<div class="modal-bg" id="paymentModalBg">
+  <div class="modal" id="paymentModal" style="max-width:520px;">
+    <button class="modal-close" id="payModalClose" onclick="closePaymentModalDirect()">✕</button>
+
+    <!-- ── CHECKOUT FORM (step 1) ── -->
+    <div id="pay-step-form" class="modal-info">
+      <h2 style="margin-bottom:1.2rem;">Complete Your Purchase</h2>
+
+      <!-- Order summary -->
+      <div style="margin-bottom:1.2rem; padding:1rem; background:var(--surface2); border-radius:10px; border:1px solid var(--border);">
+        <div style="font-family:'Playfair Display',serif; font-size:1.1rem; margin-bottom:0.5rem;" id="pay-product-name"></div>
+        <div id="pay-stock-note" style="font-size:0.74rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin-bottom:0.7rem;"></div>
+        <div style="display:flex; align-items:center; gap:0.75rem;">
+          <label style="font-size:0.8rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em;">Qty</label>
+          <div style="display:flex; align-items:center; border:1px solid var(--border); border-radius:8px; overflow:hidden;">
+            <button onclick="changeQty(-1)" style="background:var(--surface); border:none; color:var(--text); width:32px; height:32px; cursor:pointer; font-size:1.1rem; display:flex; align-items:center; justify-content:center;">−</button>
+            <span id="pay-qty" style="padding:0 0.85rem; font-size:1rem; min-width:2rem; text-align:center;">1</span>
+            <button onclick="changeQty(1)" style="background:var(--surface); border:none; color:var(--text); width:32px; height:32px; cursor:pointer; font-size:1.1rem; display:flex; align-items:center; justify-content:center;">+</button>
+          </div>
+          <span id="pay-total" style="margin-left:auto; color:var(--gold); font-size:1.1rem; font-weight:500;"></span>
+        </div>
+      </div>
+
+      <!-- Customer Info -->
+      <div style="margin-bottom:1rem;">
+        <label style="display:block; font-size:0.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.4rem;">Full Name</label>
+        <input id="customer-name" type="text" placeholder="John Doe" style="width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); padding:0.7rem 0.9rem; font-size:0.92rem; box-sizing:border-box;" required />
+      </div>
+
+      <div style="margin-bottom:1rem;">
+        <label style="display:block; font-size:0.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.4rem;">Street Address</label>
+        <input id="customer-address" type="text" placeholder="123 Main St" style="width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); padding:0.7rem 0.9rem; font-size:0.92rem; box-sizing:border-box;" required />
+      </div>
+
+      <div style="display:flex; gap:0.75rem; margin-bottom:1rem;">
+        <div style="flex:1;">
+          <label style="display:block; font-size:0.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.4rem;">City</label>
+          <input id="customer-city" type="text" placeholder="Portland" style="width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); padding:0.7rem 0.9rem; font-size:0.92rem; box-sizing:border-box;" required />
+        </div>
+        <div style="flex:0.6;">
+          <label style="display:block; font-size:0.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.4rem;">State</label>
+          <input id="customer-state" type="text" placeholder="OR" style="width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); padding:0.7rem 0.9rem; font-size:0.92rem; box-sizing:border-box;" required />
+        </div>
+        <div style="flex:0.6;">
+          <label style="display:block; font-size:0.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.4rem;">ZIP</label>
+          <input id="customer-zip" type="text" placeholder="97210" style="width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); padding:0.7rem 0.9rem; font-size:0.92rem; box-sizing:border-box;" required />
+        </div>
+      </div>
+
+      <div style="margin-bottom:1rem;">
+        <label style="display:block; font-size:0.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.4rem;">Phone Number</label>
+        <input id="customer-phone" type="tel" placeholder="(503) 555-0123" style="width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); padding:0.7rem 0.9rem; font-size:0.92rem; box-sizing:border-box;" required />
+      </div>
+
+      <div id="apple-pay-container" style="display:none; margin-bottom:0.85rem;">
+        <div id="apple-pay-button"></div>
+      </div>
+      <div id="google-pay-container" style="display:none; margin-bottom:0.85rem;">
+        <div id="google-pay-button"></div>
+      </div>
+      <div id="wallet-hint" style="display:none; font-size:0.85rem; color:var(--muted); margin-bottom:0.85rem;">
+        Wallet payments appear here when supported by your browser: Safari on iOS for Apple Pay, Chrome/Android for Google Pay.
+      </div>
+
+      <!-- Card field (Web Payments SDK) -->
+      <div id="sq-web-payments-container" style="margin-bottom:0.85rem;">
+        <div id="sq-card-button" style="margin-bottom:0.75rem;"></div>
+      </div>
+
+      <button id="sq-pay-button" class="btn-add-cart" onclick="handleCardPayment()">Pay <span id="pay-button-total"></span></button>
+      <button id="debug-fake-pay-button" class="btn-add-cart" style="display:none; margin-top:0.6rem; background:linear-gradient(135deg,#5b6bff,#2f49ff);" onclick="handleDebugFakePurchase()">Debug Fake Purchase (No Charge)</button>
+      <div id="sq-error-message" style="color:#e07070; font-size:0.9rem; margin-top:0.5rem; display:none;"></div>
+    </div>
+
+    <!-- ── PROCESSING (step 2) ── -->
+    <div id="pay-step-processing" style="display:none; padding:3rem 2rem; text-align:center;">
+      <div class="pay-spinner"></div>
+      <p style="margin-top:1.5rem; font-size:1.05rem; color:var(--muted);">Processing payment…</p>
+      <p style="margin-top:0.4rem; font-size:0.85rem; color:var(--muted);">Please don't close this window</p>
+    </div>
+
+    <!-- ── SUCCESS / RECEIPT (step 3) ── -->
+    <div id="pay-step-success" style="display:none; padding:2.5rem 2rem; text-align:center;">
+      <div style="font-size:3.5rem; margin-bottom:1rem;">✅</div>
+      <h2 style="font-family:'Playfair Display',serif; color:var(--gold-light); margin-bottom:0.5rem;">Order Placed!</h2>
+      <p style="color:var(--muted); font-size:0.95rem; margin-bottom:1.8rem;" id="receipt-email-msg"></p>
+      <div style="background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:1.2rem; text-align:left; margin-bottom:1.5rem;">
+        <div style="font-size:0.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.8rem;">Order Summary</div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+          <span id="receipt-product" style="color:var(--text);"></span>
+          <span id="receipt-qty" style="color:var(--muted); font-size:0.9rem;"></span>
+        </div>
+        <div style="display:flex; justify-content:space-between; border-top:1px solid var(--border); padding-top:0.6rem; margin-top:0.6rem;">
+          <span style="color:var(--muted); font-size:0.85rem;">Total charged</span>
+          <span id="receipt-total" style="color:var(--gold); font-weight:500;"></span>
+        </div>
+        <div style="margin-top:0.6rem; font-size:0.78rem; color:var(--muted);">Order ID: <span id="receipt-order-id" style="font-family:monospace;"></span></div>
+      </div>
+      <button onclick="closePaymentModalDirect()" class="btn-add-cart" style="margin-top:0;">Done</button>
+    </div>
+
+    <!-- ── DECLINED / ERROR (step 4) ── -->
+    <div id="pay-step-error" style="display:none; padding:2.5rem 2rem; text-align:center;">
+      <div style="font-size:3.5rem; margin-bottom:1rem;">❌</div>
+      <h2 style="font-family:'Playfair Display',serif; color:#e07070; margin-bottom:0.5rem;" id="pay-error-title">Payment Declined</h2>
+      <p style="color:var(--muted); font-size:0.9rem; margin-bottom:1.8rem;" id="pay-error-msg">Your card was declined. Please try a different card.</p>
+      <button onclick="payShowStep('form')" class="btn-add-cart">Try Again</button>
+    </div>
+
+  </div>
+</div>
+
+<footer id="siteFooter">© 2025 Miles To Print — All rights reserved</footer>
+
+<script>
+let products = [], currentImages = [], currentImgIdx = 0;
+let contact = {};
+let currentProductId = null;
+let currentQty = 1;
+let currentProduct = null;
+let squareConfig = null;
+let squarePayments = null;
+let squareCard = null;
+let squareApplePay = null;
+let squareGooglePay = null;
+let gallerySwipePointerId = null;
+let gallerySwipeStartX = 0;
+let gallerySwipeStartY = 0;
+let galleryPreloaded = new Set();
+let storeSettings = { storeOpen: true, publicMessage: '', debugFakePurchase: false };
+let globalColors = [];
+let globalFilaments = [];
+let materialsMap = {};
+let filamentMaterialsMap = {};
+let isLowPowerMode = false;
+
+const BOOTSTRAP_CACHE_KEY = 'storefrontBootstrap:v2';
+const BOOTSTRAP_CACHE_MAX_AGE_MS = 1000 * 60 * 20;
+const FETCH_TIMEOUT_MS = 12000;
+const GET_RETRY_COUNT = 2;
+
+function getConnectionInfo() {
+  return navigator.connection || navigator.mozConnection || navigator.webkitConnection || null;
+}
+
+function detectLowPowerMode() {
+  const conn = getConnectionInfo();
+  const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const saveData = Boolean(conn && conn.saveData);
+  const lowCpu = Number.isFinite(navigator.hardwareConcurrency) && navigator.hardwareConcurrency > 0 && navigator.hardwareConcurrency <= 4;
+  const lowMemory = Number.isFinite(navigator.deviceMemory) && navigator.deviceMemory > 0 && navigator.deviceMemory <= 4;
+  return prefersReducedMotion || saveData || lowCpu || lowMemory;
+}
+
+function applyDevicePerformanceMode() {
+  isLowPowerMode = detectLowPowerMode();
+  document.body.classList.toggle('low-power', isLowPowerMode);
+}
+
+function getCardImageWidths() {
+  return isLowPowerMode ? [240, 360, 520] : [320, 480, 720];
+}
+
+function getGalleryMainWidth() {
+  return isLowPowerMode ? 560 : 720;
+}
+
+function saveBootstrapCache(payload) {
+  try {
+    localStorage.setItem(BOOTSTRAP_CACHE_KEY, JSON.stringify({ savedAt: Date.now(), payload }));
+  } catch (err) {
+    console.warn('Bootstrap cache save failed:', err);
+  }
+}
+
+function loadBootstrapCache() {
+  try {
+    const raw = localStorage.getItem(BOOTSTRAP_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || !parsed.payload || !parsed.savedAt) return null;
+    if ((Date.now() - parsed.savedAt) > BOOTSTRAP_CACHE_MAX_AGE_MS) return null;
+    return parsed.payload;
+  } catch (err) {
+    console.warn('Bootstrap cache read failed:', err);
+    return null;
+  }
+}
+
+function updateNetworkStatus(message, offline) {
+  const el = document.getElementById('networkStatus');
+  if (!el) return;
+  if (!message) {
+    el.textContent = '';
+    el.classList.remove('show', 'offline');
+    return;
+  }
+  el.textContent = message;
+  el.classList.add('show');
+  el.classList.toggle('offline', Boolean(offline));
+}
+
+function wireConnectionListeners() {
+  window.addEventListener('offline', () => updateNetworkStatus('Offline mode', true));
+  window.addEventListener('online', () => {
+    updateNetworkStatus('Back online', false);
+    setTimeout(() => updateNetworkStatus('', false), 1800);
+  });
+  if (!navigator.onLine) updateNetworkStatus('Offline mode', true);
+}
+
+async function fetchJsonWithRetry(url, opts = {}) {
+  const method = String(opts.method || 'GET').toUpperCase();
+  const retryCount = method === 'GET' ? GET_RETRY_COUNT : 0;
+  let lastErr = null;
+
+  for (let attempt = 0; attempt <= retryCount; attempt += 1) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    try {
+      const response = await fetch(url, { ...opts, signal: controller.signal });
+      if (!response.ok) throw new Error(`${url} returned ${response.status}`);
+      return await response.json();
+    } catch (err) {
+      lastErr = err;
+      if (attempt < retryCount) {
+        await new Promise(resolve => setTimeout(resolve, 250 * (attempt + 1)));
+      }
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  throw lastErr || new Error(`Request failed: ${url}`);
+}
+
+function normalizeMaterialName(name) {
+  return String(name || '').trim().toUpperCase();
+}
+
+function normalizeColorName(name) {
+  return String(name || '').trim();
+}
+
+function buildFilamentMaterialsMap(filaments) {
+  const out = {};
+  (Array.isArray(filaments) ? filaments : []).forEach(entry => {
+    const parts = String(entry || '').split(':');
+    const material = normalizeMaterialName(parts[0]);
+    const color = normalizeColorName(parts.slice(1).join(':'));
+    if (!material || !color) return;
+    if (!out[material]) out[material] = [];
+    if (!out[material].some(c => c.toLowerCase() === color.toLowerCase())) out[material].push(color);
+  });
+  return out;
+}
+
+function getColorsForMaterial(materialName) {
+  const material = normalizeMaterialName(materialName);
+  if (!material) return globalColors;
+  let colors = filamentMaterialsMap[material] || materialsMap[material];
+  if (!colors && materialsMap && typeof materialsMap === 'object') {
+    const matchedKey = Object.keys(materialsMap).find(key => normalizeMaterialName(key) === material);
+    if (matchedKey) colors = materialsMap[matchedKey];
+  }
+  if (!Array.isArray(colors) || !colors.length) return [];
+  return colors;
+}
+
+function getAllowedColorsForProduct(product) {
+  const material = String(product && (product.material || product.primaryFilament || product.filamentType) || '').trim();
+  // Filament-managed products must resolve colors from their configured material only.
+  if (product && product.hasFilaments && !material) return [];
+  return getColorsForMaterial(material);
+}
+
+function getSecondaryColorsForProduct(product) {
+  const secondaryMaterial = String(product && (product.secondaryFilament || product.material || product.primaryFilament || product.filamentType) || '').trim();
+  if (!secondaryMaterial) return [];
+  return getColorsForMaterial(secondaryMaterial);
+}
+
+function formatSelectedProductLabel(product) {
+  if (!product) return '';
+  const variant = String(product.selectedVariant || '').trim();
+  const primaryColor = String(product.selectedColor || '').trim();
+  const secondaryColor = String(product.selectedSecondaryColor || '').trim();
+  const primaryMaterial = String(product.selectedPrimaryFilament || '').trim();
+  const secondaryMaterial = String(product.selectedSecondaryFilament || '').trim();
+  const colorParts = [variant, primaryColor, secondaryColor].filter(Boolean);
+  const materialParts = [primaryMaterial, secondaryMaterial].filter(Boolean);
+  let label = product.name || '';
+  if (colorParts.length) label += ` (${colorParts.join(' / ')})`;
+  if (materialParts.length) label += ` [${materialParts.join(' / ')}]`;
+  return label;
+}
+
+function getProductVariants(product) {
+  if (!product || !Array.isArray(product.variants)) return [];
+  const out = [];
+  const seen = new Set();
+  product.variants.forEach(item => {
+    const value = String(item || '').trim();
+    if (!value) return;
+    const key = value.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push(value);
+  });
+  return out;
+}
+
+function getResponsiveImageUrl(src, width) {
+  if (!src) return src;
+  try {
+    const url = new URL(src, window.location.origin);
+    url.searchParams.set('w', width);
+    url.searchParams.set('q', '80');
+    return url.pathname + url.search;
+  } catch {
+    return src;
+  }
+}
+
+function getImageSrcSet(src, widths = [320, 640, 960]) {
+  return widths.map(width => `${getResponsiveImageUrl(src, width)} ${width}w`).join(', ');
+}
+
+function getListingType(product) {
+  if (!product) return 'pod';
+  if (product.listingType === 'etsy') return 'etsy';
+  if (product.listingType === 'limited' || product.listingType === 'inventory') return 'limited';
+  return 'pod';
+}
+
+function getInventoryQuantity(product) {
+  if (!product || product.quantity === undefined || product.quantity === null || product.quantity === '') return null;
+  const qty = parseInt(product.quantity, 10);
+  return Number.isNaN(qty) ? null : Math.max(0, qty);
+}
+
+function getStockLabel(product) {
+  const qty = getInventoryQuantity(product);
+  if (qty === null) return 'Unlimited stock';
+  if (qty === 0) return 'Sold out';
+  if (qty === 1) return '1 left';
+  return `${qty} left`;
+}
+
+function getEtsyUrl(product) {
+  return product && product.etsyUrl ? product.etsyUrl : '';
+}
+
+function openEtsyProduct(id) {
+  const product = products.find(p => p.id === id);
+  if (!product) return;
+  const url = getEtsyUrl(product);
+  if (!url) return showToast('Etsy link is missing for this item.');
+  window.open(url, '_blank', 'noopener,noreferrer');
+}
+
+function handleProductCard(id) {
+  const product = products.find(p => p.id === id);
+  if (!product) return;
+  if (getListingType(product) === 'etsy') {
+    openEtsyProduct(id);
+    return;
+  }
+  openModal(id);
+}
+
+function changeQty(delta) {
+  const product = products.find(p => p.id === currentProductId);
+  const listingType = product ? getListingType(product) : 'pod';
+  const maxQty = product ? getInventoryQuantity(product) : null;
+  currentQty = Math.max(1, currentQty + delta);
+  if (listingType === 'limited' && maxQty !== null) currentQty = Math.min(currentQty, Math.max(1, maxQty));
+  document.getElementById('pay-qty').textContent = currentQty;
+  if (product) {
+    const total = (parseFloat(product.price) * currentQty).toFixed(2);
+    document.getElementById('pay-total').textContent = '$' + total;
+    document.getElementById('pay-button-total').textContent = '$' + total;
+    const stockNote = document.getElementById('pay-stock-note');
+    if (stockNote) stockNote.textContent = listingType === 'limited' ? `${getStockLabel(product)} available` : 'Unlimited stock';
+    if (currentProductId) {
+      renderSquareCheckoutWidgets(product).catch(() => {});
+    }
+  }
+}
+
+function updateStoreUI() {
+  const banner = document.getElementById('storeBanner');
+  if (!storeSettings.storeOpen) {
+    banner.textContent = storeSettings.debugFakePurchase
+      ? (storeSettings.publicMessage || 'Store is closed, but Debug Fake Purchase mode is enabled for testing.')
+      : (storeSettings.publicMessage || 'The store is currently closed. Check back soon.');
+    banner.style.display = 'block';
+  } else if (storeSettings.publicMessage) {
+    banner.textContent = storeSettings.publicMessage;
+    banner.style.display = 'block';
+  } else {
+    banner.style.display = 'none';
+  }
+
+  // Apply wallpaper and frosted overlay
+  applyWallpaper();
+}
+
+function applyWallpaper() {
+  const body = document.body;
+  const existingWallpaper = document.getElementById('wallpaper-overlay');
+  const existingFrosted = document.getElementById('frosted-overlay');
+
+  // Remove existing overlays
+  if (existingWallpaper) existingWallpaper.remove();
+  if (existingFrosted) existingFrosted.remove();
+
+  // Apply wallpaper if set
+  if (storeSettings.wallpaperUrl) {
+    // Set background with wallpaper
+    body.style.background = `url('${storeSettings.wallpaperUrl}') center/cover fixed no-repeat`;
+    body.style.backgroundColor = 'transparent'; // Remove default background color
+
+    // Add frosted overlay if enabled
+    if (storeSettings.frostedOverlay && !isLowPowerMode) {
+      const frosted = document.createElement('div');
+      frosted.id = 'frosted-overlay';
+      frosted.style.position = 'fixed';
+      frosted.style.top = '0';
+      frosted.style.left = '0';
+      frosted.style.width = '100%';
+      frosted.style.height = '100%';
+      frosted.style.backdropFilter = 'blur(8px)';
+      frosted.style.webkitBackdropFilter = 'blur(8px)'; // Safari support
+      frosted.style.backgroundColor = 'rgba(15, 14, 12, 0.7)';
+      frosted.style.zIndex = '-1';
+      frosted.style.pointerEvents = 'none';
+      body.appendChild(frosted);
+    }
+  } else {
+    // Reset to default background
+    body.style.background = '';
+    body.style.backgroundColor = '';
+  }
+}
+
+async function init() {
+  applyDevicePerformanceMode();
+  wireConnectionListeners();
+
+  try {
+    const [cfg, loadedProducts, loadedContact, rawMaterials, legacyColorsRaw, loadedFilaments] = await Promise.all([
+      fetchJsonWithRetry('/api/config'),
+      fetchJsonWithRetry('/api/products'),
+      fetchJsonWithRetry('/api/contact'),
+      fetchJsonWithRetry('/api/materials'),
+      fetchJsonWithRetry('/api/colors'),
+      fetchJsonWithRetry('/api/filaments')
+    ]);
+    products = Array.isArray(loadedProducts) ? loadedProducts : [];
+    contact = loadedContact || {};
+    materialsMap = {};
+    Object.keys(rawMaterials || {}).forEach(key => {
+      const normalizedMaterial = normalizeMaterialName(key);
+      const rawColors = Array.isArray(rawMaterials[key]) ? rawMaterials[key] : [];
+      if (!normalizedMaterial) return;
+      if (!materialsMap[normalizedMaterial]) materialsMap[normalizedMaterial] = [];
+      rawColors.map(c => normalizeColorName(c)).filter(Boolean).forEach(color => {
+        if (!materialsMap[normalizedMaterial].some(existing => existing.toLowerCase() === color.toLowerCase())) {
+          materialsMap[normalizedMaterial].push(color);
+        }
+      });
+    });
+    const legacyColors = Array.isArray(legacyColorsRaw)
+      ? legacyColorsRaw.map(c => typeof c === 'string' ? c : (c && c.name) || '').filter(Boolean)
+      : [];
+    globalFilaments = Array.isArray(loadedFilaments) ? loadedFilaments : [];
+    filamentMaterialsMap = buildFilamentMaterialsMap(globalFilaments);
+    const allColors = [
+      ...Object.values(filamentMaterialsMap || {}).flat(),
+      ...Object.values(materialsMap || {}).flat(),
+      ...legacyColors
+    ].map(c => normalizeColorName(c)).filter(Boolean);
+    globalColors = [];
+    allColors.forEach(color => {
+      if (!globalColors.some(existing => existing.toLowerCase() === color.toLowerCase())) globalColors.push(color);
+    });
+
+    squareConfig = cfg;
+    await loadSquareScript(cfg.squareEnvironment);
+    window.SQUARE_APP_ID = cfg.squareAppId;
+    window.SQUARE_LOCATION_ID = cfg.squareLocationId;
+
+    storeSettings = {
+      storeOpen: cfg.storeOpen,
+      publicMessage: cfg.publicMessage || '',
+      wallpaperUrl: cfg.wallpaperUrl || '',
+      frostedOverlay: cfg.frostedOverlay || false,
+      debugFakePurchase: cfg.debugFakePurchase === true
+    };
+
+    document.title                             = cfg.storeName;
+    document.getElementById('pageTitle').textContent      = cfg.storeName;
+    document.getElementById('headerStoreName').textContent = cfg.storeName;
+    document.getElementById('siteFooter').textContent     = cfg.footer;
+
+    updateStoreUI();
+
+    renderStoreSections();
+    renderContact();
+    handleCheckoutRedirect();
+    saveBootstrapCache({ cfg, products, contact, rawMaterials, legacyColorsRaw, filaments: globalFilaments });
+    updateNetworkStatus('', false);
+  } catch (e) {
+    console.error('Init failed:', e);
+    const cached = loadBootstrapCache();
+    if (!cached) return;
+
+    const cfg = cached.cfg || {
+      storeName: 'Miles To Print',
+      footer: '© 2025 Miles To Print — All rights reserved',
+      storeOpen: true
+    };
+
+    products = Array.isArray(cached.products) ? cached.products : [];
+    contact = cached.contact || {};
+    globalFilaments = Array.isArray(cached.filaments) ? cached.filaments : [];
+
+    materialsMap = {};
+    Object.keys(cached.rawMaterials || {}).forEach(key => {
+      const normalizedMaterial = normalizeMaterialName(key);
+      const rawColors = Array.isArray(cached.rawMaterials[key]) ? cached.rawMaterials[key] : [];
+      if (!normalizedMaterial) return;
+      if (!materialsMap[normalizedMaterial]) materialsMap[normalizedMaterial] = [];
+      rawColors.map(c => normalizeColorName(c)).filter(Boolean).forEach(color => {
+        if (!materialsMap[normalizedMaterial].some(existing => existing.toLowerCase() === color.toLowerCase())) {
+          materialsMap[normalizedMaterial].push(color);
+        }
+      });
+    });
+
+    const legacyColors = Array.isArray(cached.legacyColorsRaw)
+      ? cached.legacyColorsRaw.map(c => typeof c === 'string' ? c : (c && c.name) || '').filter(Boolean)
+      : [];
+    filamentMaterialsMap = buildFilamentMaterialsMap(globalFilaments);
+    const allColors = [
+      ...Object.values(filamentMaterialsMap || {}).flat(),
+      ...Object.values(materialsMap || {}).flat(),
+      ...legacyColors
+    ].map(c => normalizeColorName(c)).filter(Boolean);
+    globalColors = [];
+    allColors.forEach(color => {
+      if (!globalColors.some(existing => existing.toLowerCase() === color.toLowerCase())) globalColors.push(color);
+    });
+
+    squareConfig = cfg;
+    window.SQUARE_APP_ID = cfg.squareAppId;
+    window.SQUARE_LOCATION_ID = cfg.squareLocationId;
+
+    storeSettings = {
+      storeOpen: cfg.storeOpen !== false,
+      publicMessage: cfg.publicMessage || '',
+      wallpaperUrl: cfg.wallpaperUrl || '',
+      frostedOverlay: cfg.frostedOverlay || false,
+      debugFakePurchase: cfg.debugFakePurchase === true
+    };
+
+    document.title = cfg.storeName || 'Miles To Print';
+    document.getElementById('pageTitle').textContent = cfg.storeName || 'Miles To Print';
+    document.getElementById('headerStoreName').textContent = cfg.storeName || 'Miles To Print';
+    document.getElementById('siteFooter').textContent = cfg.footer || '© 2025 Miles To Print — All rights reserved';
+
+    updateStoreUI();
+    renderStoreSections();
+    renderContact();
+    handleCheckoutRedirect();
+    updateNetworkStatus('Using cached data', true);
+  }
+}
+
+async function loadSquareScript(env) {
+  if (window.squareScriptLoaded) return;
+  const squareScript = document.createElement('script');
+  squareScript.src = env === 'Production'
+    ? 'https://web.squarecdn.com/v1/square.js'
+    : 'https://sandbox.web.squarecdn.com/v1/square.js';
+  squareScript.async = true;
+  document.head.appendChild(squareScript);
+
+  await new Promise((resolve, reject) => {
+    squareScript.onload = () => {
+      window.squareScriptLoaded = true;
+      resolve();
+    };
+    squareScript.onerror = reject;
+    setTimeout(() => reject(new Error('Square.js load timeout')), 10000);
+  });
+}
+
+async function getSquarePayments() {
+  if (squarePayments) return squarePayments;
+  if (!window.SQUARE_APP_ID || !window.SQUARE_LOCATION_ID) {
+    throw new Error('Square configuration is missing');
+  }
+  squarePayments = await Square.payments(window.SQUARE_APP_ID, window.SQUARE_LOCATION_ID);
+  return squarePayments;
+}
+
+// ── Pages ─────────────────────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  const btn = document.getElementById('nav-' + name);
+  if (btn) btn.classList.add('active');
+  window.scrollTo({ top: 0, behavior: isLowPowerMode ? 'auto' : 'smooth' });
+}
+
+function handleNavClick(name) {
+  showPage(name);
+  if (window.innerWidth <= 760) {
+    toggleMobileNav(false);
+  }
+}
+
+function toggleMobileNav(force) {
+  const header = document.querySelector('header');
+  const button = document.getElementById('mobileMenuToggle');
+  const open = force === undefined ? !header.classList.contains('nav-open') : Boolean(force);
+  header.classList.toggle('nav-open', open);
+  button.setAttribute('aria-expanded', String(open));
+  button.textContent = open ? 'Close' : 'Menu';
+}
+
+function toggleSuccessTab(visible) {
+  const btn = document.getElementById('nav-success');
+  if (!btn) return;
+  btn.style.display = visible ? '' : 'none';
+}
+
+function saveCheckoutDraft(product, qty) {
+  if (!product) return;
+  const itemName = formatSelectedProductLabel(product);
+  const total = '$' + (parseFloat(product.price) * qty).toFixed(2);
+  localStorage.setItem('lastCheckout', JSON.stringify({
+    itemName,
+    qty,
+    total
+  }));
+}
+
+function populateSuccessPage() {
+  let data = null;
+  const stored = localStorage.getItem('lastCheckout');
+  if (stored) {
+    try {
+      data = JSON.parse(stored);
+    } catch (err) {
+      console.warn('Failed to parse stored checkout draft:', err);
+    }
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  if (!data && params.get('checkout') === 'complete') {
+    const itemName = params.get('itemName');
+    const quantity = params.get('quantity');
+    const total = params.get('total');
+    if (itemName || quantity || total) {
+      data = {
+        itemName: itemName || '—',
+        qty: quantity || '—',
+        total: total ? '$' + total : '—'
+      };
+    }
+  }
+
+  if (!data) return;
+
+  document.getElementById('success-detail').textContent =
+    `Your payment is complete! Thank you so much for supporting Miles To Print. Your order is on its way and I hope it brings you lots of joy.`;
+  document.getElementById('success-product').textContent = data.itemName || '—';
+  document.getElementById('success-qty').textContent = data.qty || '—';
+  document.getElementById('success-total').textContent = data.total || '—';
+  localStorage.removeItem('lastCheckout');
+}
+
+function handleCheckoutRedirect() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('checkout') === 'complete') {
+    toggleSuccessTab(true);
+    populateSuccessPage();
+    showPage('success');
+    params.delete('checkout');
+    params.delete('itemName');
+    params.delete('quantity');
+    params.delete('total');
+    const url = new URL(window.location);
+    url.search = params.toString();
+    window.history.replaceState({}, '', url.toString());
+  }
+}
+
+// ── Store sections ───────────────────────────────────────────────
+function renderStoreSections() {
+  const podGrid = document.getElementById('podGrid');
+  const limitedGrid = document.getElementById('limitedGrid');
+  const etsyGrid = document.getElementById('etsyGrid');
+
+  if (!storeSettings.storeOpen && !storeSettings.debugFakePurchase) {
+    if (podGrid) podGrid.innerHTML = `<div class="empty"><span>⛔</span>The store is currently closed.</div>`;
+    if (limitedGrid) limitedGrid.innerHTML = `<div class="empty"><span>⛔</span>The store is currently closed.</div>`;
+    if (etsyGrid) etsyGrid.innerHTML = `<div class="empty"><span>⛔</span>The store is currently closed.</div>`;
+    return;
+  }
+
+  const podProducts = products.filter(p => getListingType(p) === 'pod');
+  const limitedProducts = products.filter(p => getListingType(p) === 'limited');
+  const etsyProducts = products.filter(p => getListingType(p) === 'etsy');
+
+  if (podGrid) {
+    podGrid.innerHTML = podProducts.length ? podProducts.map(p => renderStoreCard(p, 'pod')).join('') : `<div class="empty"><span>🛍️</span>No POD products yet. Check back soon!</div>`;
+  }
+  if (limitedGrid) {
+    limitedGrid.innerHTML = limitedProducts.length ? limitedProducts.map(p => renderStoreCard(p, 'limited')).join('') : `<div class="empty"><span>⏳</span>No limited-time items yet. Check back soon!</div>`;
+  }
+  if (etsyGrid) {
+    etsyGrid.innerHTML = etsyProducts.length ? etsyProducts.map(renderEtsyCard).join('') : `<div class="empty"><span>🪡</span>No Etsy products yet. Check back soon!</div>`;
+  }
+}
+
+function renderStoreCard(p, pageType) {
+  const widths = getCardImageWidths();
+  const imageSrc = p.images && p.images.length ? getResponsiveImageUrl(p.images[0], widths[1]) : null;
+  const imageSrcSet = p.images && p.images.length ? getImageSrcSet(p.images[0], widths) : '';
+  const qty = getInventoryQuantity(p);
+  const soldOut = qty === 0;
+  const listingType = getListingType(p);
+  const stockLabel = listingType === 'limited' ? getStockLabel(p) : 'Unlimited stock';
+  const hasColors = p.hasColors && getAllowedColorsForProduct(p).length > 0;
+  const hasSecondaryColor = p.hasSecondaryColor && getSecondaryColorsForProduct(p).length > 0;
+  const hasVariants = getProductVariants(p).length > 0;
+  const needsOptions = hasColors || hasSecondaryColor || hasVariants;
+  const pageLabel = pageType === 'limited' ? 'Limited time' : 'Print on demand';
+  return `
+    <div class="card ${soldOut ? 'is-sold-out' : ''}" onclick="handleProductCard('${p.id}')">
+      <div class="card-img">
+        ${imageSrc ? `<img src="${imageSrc}" srcset="${imageSrcSet}" sizes="(max-width: 520px) 100vw, 280px" alt="${esc(p.name)}" loading="lazy" decoding="async" data-fallback="${p.images[0]}" onerror="if(this.dataset.fallback && this.src !== this.dataset.fallback){this.src=this.dataset.fallback; this.srcset='';}"/>` : '📦'}
+        <div class="card-badge-row">
+          <span class="card-badge gold">${esc(pageLabel)}</span>
+          <span class="card-badge">${listingType === 'limited' ? esc(stockLabel) : 'Unlimited stock'}</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-name">${esc(p.name)}</div>
+        <div class="card-desc">${esc(p.description || 'No description provided.')}</div>
+        <div class="card-meta">
+          <div class="card-price">$${parseFloat(p.price).toFixed(2)}</div>
+          <div class="card-stock">${listingType === 'limited' ? (qty === null ? 'Quantity: <strong>set by you</strong>' : `Quantity: <strong>${qty}</strong>`) : 'Unlimited stock'}</div>
+        </div>
+        <div class="card-cta">
+          <button class="btn-add-cart" onclick="event.stopPropagation(); ${soldOut ? 'showToast(\'This item is sold out.\')' : needsOptions ? `openModal('${p.id}')` : `buyNow('${p.id}')`}">${soldOut ? 'Sold out' : 'Buy now'}</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderEtsyCard(p) {
+  const widths = getCardImageWidths();
+  const imageSrc = p.images && p.images.length ? getResponsiveImageUrl(p.images[0], widths[1]) : null;
+  const imageSrcSet = p.images && p.images.length ? getImageSrcSet(p.images[0], widths) : '';
+  const url = getEtsyUrl(p);
+  return `
+    <div class="card" onclick="handleProductCard('${p.id}')">
+      <div class="card-img">
+        ${imageSrc ? `<img src="${imageSrc}" srcset="${imageSrcSet}" sizes="(max-width: 520px) 100vw, 280px" alt="${esc(p.name)}" loading="lazy" decoding="async" data-fallback="${p.images[0]}" onerror="if(this.dataset.fallback && this.src !== this.dataset.fallback){this.src=this.dataset.fallback; this.srcset='';}"/>` : '🪡'}
+        <div class="card-badge-row">
+          <span class="card-badge gold">Etsy</span>
+          <span class="card-badge">External link</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-name">${esc(p.name)}</div>
+        <div class="card-desc">${esc(p.description || 'View this item on Etsy.')}</div>
+        <div class="card-meta">
+          <div class="card-price">$${parseFloat(p.price).toFixed(2)}</div>
+          <div class="card-stock">Preview image + shop link</div>
+        </div>
+        <div class="card-cta">
+          <a class="card-link ${url ? '' : 'disabled'}" href="${url || '#'}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">Open Etsy</a>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ── Contact ───────────────────────────────────────────────────────
+function renderContact() {
+  const c    = contact;
+  const list = document.getElementById('contactItems');
+  const items = [];
+
+  if (c.email)     items.push({ icon:'📧', label:'Email',     html:`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>` });
+  if (c.phone)     items.push({ icon:'📞', label:'Phone',     html:`<a href="tel:${esc(c.phone)}">${esc(c.phone)}</a>` });
+  if (c.instagram) {
+    const handle = c.instagram.replace(/^@/, '');
+    items.push({ icon:'📷', label:'Instagram', html:`<a href="https://instagram.com/${handle}" target="_blank" rel="noopener">@${esc(handle)}</a>` });
+  }
+  if (c.etsy) {
+    const shop = c.etsy.replace(/^https?:\/\/(www\.)?etsy\.com\/shop\//, '').replace(/\/$/, '');
+    items.push({ icon:'🛍️', label:'Etsy Shop', html:`<a href="https://etsy.com/shop/${shop}" target="_blank" rel="noopener">${esc(shop)}</a>` });
+  }
+
+  if (!items.length && !c.custom) {
+    list.innerHTML = `<div class="contact-empty"><span>📭</span>Contact info coming soon.</div>`;
+    return;
+  }
+
+  list.innerHTML = items.map(item => `
+    <div class="contact-item">
+      <div class="ci-icon">${item.icon}</div>
+      <div>
+        <div class="ci-label">${item.label}</div>
+        <div class="ci-value">${item.html}</div>
+      </div>
+    </div>
+  `).join('');
+
+  if (c.custom) {
+    document.getElementById('customHtml').innerHTML = `<div>${c.custom}</div>`;
+  }
+}
+
+// ── Modal ─────────────────────────────────────────────────────────
+function openModal(id) {
+  if (!storeSettings.storeOpen && !storeSettings.debugFakePurchase) return;
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  if (getListingType(p) === 'etsy') {
+    openEtsyProduct(id);
+    return;
+  }
+  if (getListingType(p) === 'limited' && getInventoryQuantity(p) === 0) {
+    showToast('This item is sold out.');
+    return;
+  }
+  const availableQty = getInventoryQuantity(p);
+  currentProductId = id;
+  currentImages  = p.images || [];
+  currentImgIdx  = 0;
+
+  document.getElementById('mName').textContent  = p.name;
+  document.getElementById('mPrice').textContent = '$' + parseFloat(p.price).toFixed(2);
+  document.getElementById('mDesc').textContent  = p.description || 'No description provided.';
+  const modalMeta = document.getElementById('modalMeta');
+  if (modalMeta) {
+    const qty = getInventoryQuantity(p);
+    const listingType = getListingType(p);
+    modalMeta.innerHTML = `
+      <span class="modal-stock">${listingType === 'limited' ? getStockLabel(p) : 'Unlimited stock'}</span>
+      ${getProductVariants(p).length ? '<span class="modal-stock">Variant options available</span>' : ''}
+      ${p.hasColors && getAllowedColorsForProduct(p).length > 0 ? '<span class="modal-stock">Color options available</span>' : ''}
+      ${p.hasSecondaryColor && getSecondaryColorsForProduct(p).length > 0 ? '<span class="modal-stock">Secondary color options available</span>' : ''}
+    `;
+  }
+
+  const colorSelect = document.getElementById('colorSelect');
+  const colorSelection = document.getElementById('colorSelection');
+  const colorSelectSecondary = document.getElementById('colorSelectSecondary');
+  const colorSelectionSecondary = document.getElementById('colorSelectionSecondary');
+  const variantSelect = document.getElementById('variantSelect');
+  const variantSelection = document.getElementById('variantSelection');
+
+  const renderPrimaryColors = () => {
+    const primaryMaterial = (p.material || p.primaryFilament || p.filamentType || '').trim();
+    const allowedColors = getColorsForMaterial(primaryMaterial);
+    if (p.hasColors && allowedColors.length > 0) {
+      const opts = '<option value="">Select a color...</option>' + allowedColors.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+      colorSelect.innerHTML = opts;
+      colorSelection.style.display = 'block';
+    } else {
+      colorSelection.style.display = 'none';
+      colorSelect.innerHTML = '<option value="">Select a color...</option>';
+    }
+  };
+
+  const renderSecondaryColors = () => {
+    const secondaryColors = getSecondaryColorsForProduct(p);
+    if (p.hasSecondaryColor && secondaryColors.length > 0) {
+      const opts = '<option value="">Select a secondary color...</option>' + secondaryColors.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+      colorSelectSecondary.innerHTML = opts;
+      colorSelectionSecondary.style.display = 'block';
+    } else {
+      colorSelectionSecondary.style.display = 'none';
+      colorSelectSecondary.innerHTML = '<option value="">Select a secondary color...</option>';
+    }
+  };
+
+  renderPrimaryColors();
+  renderSecondaryColors();
+  const variants = getProductVariants(p);
+  if (variants.length) {
+    const opts = '<option value="">Select a variant...</option>' + variants.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+    variantSelect.innerHTML = opts;
+    variantSelection.style.display = 'block';
+  } else {
+    variantSelection.style.display = 'none';
+    variantSelect.innerHTML = '<option value="">Select a variant...</option>';
+  }
+
+  renderGallery();
+  document.getElementById('modalBg').classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  // Record view (fire-and-forget)
+  fetch('/api/analytics/view/' + id, { method: 'POST' }).catch(() => {});
+}
+
+function renderGallery() {
+  const g = document.getElementById('gallery');
+  if (!currentImages.length) { g.innerHTML = `<div class="gallery-placeholder">📦</div>`; return; }
+  const mainImage = currentImages[currentImgIdx];
+  const mainResponsive = getResponsiveImageUrl(mainImage, getGalleryMainWidth());
+  g.innerHTML = `
+    <img class="gallery-main" id="galleryMain" src="${mainResponsive}" alt="Product image" decoding="async" data-fallback="${mainImage}" onload="onGalleryMainLoad(this)" onerror="onGalleryMainError(this)"/>
+    <button class="gallery-retry" id="galleryRetryBtn" type="button" onclick="retryCurrentGalleryImage()">Image failed. Tap to retry</button>
+    ${currentImages.length > 1 ? `
+      <button class="gallery-nav prev" onclick="changeImg(-1)">‹</button>
+      <button class="gallery-nav next" onclick="changeImg(1)">›</button>
+      <div class="gallery-thumbs">
+        ${currentImages.map((img, i) => `
+          <img src="${getResponsiveImageUrl(img, 240)}" class="${i === currentImgIdx ? 'active' : ''}" onclick="setImg(${i})" alt="thumb" loading="lazy" decoding="async" data-fallback="${img}" data-index="${i}" onerror="onGalleryThumbError(this)"/>
+        `).join('')}
+      </div>
+    ` : ''}
+  `;
+  setGalleryLoading(true);
+  setGalleryRetryVisible(false);
+  preloadNearbyGalleryImages();
+  attachGallerySwipeHandlers();
+}
+
+function setGalleryLoading(isLoading) {
+  const gallery = document.getElementById('gallery');
+  if (!gallery) return;
+  gallery.classList.toggle('is-loading', Boolean(isLoading));
+}
+
+function setGalleryRetryVisible(isVisible) {
+  const retryBtn = document.getElementById('galleryRetryBtn');
+  if (!retryBtn) return;
+  retryBtn.style.display = isVisible ? 'inline-flex' : 'none';
+}
+
+function retryCurrentGalleryImage() {
+  const mainEl = document.getElementById('galleryMain');
+  if (!mainEl || !currentImages.length) return;
+  const mainImage = currentImages[currentImgIdx];
+  setGalleryRetryVisible(false);
+  setGalleryLoading(true);
+  mainEl.dataset.fallback = mainImage;
+  mainEl.dataset.fallbackAttempted = '0';
+  mainEl.srcset = '';
+  mainEl.src = `${getResponsiveImageUrl(mainImage, getGalleryMainWidth())}&retry=${Date.now()}`;
+}
+
+function onGalleryMainLoad(el) {
+  if (!el) return;
+  el.classList.add('loaded');
+  setGalleryLoading(false);
+  setGalleryRetryVisible(false);
+}
+
+function onGalleryMainError(el) {
+  if (!el) return;
+  if (el.dataset.fallbackAttempted === '1') {
+    el.classList.add('loaded');
+    setGalleryLoading(false);
+    setGalleryRetryVisible(true);
+    return;
+  }
+  el.dataset.fallbackAttempted = '1';
+  el.srcset = '';
+  el.src = el.dataset.fallback || el.src;
+}
+
+function onGalleryThumbError(el) {
+  if (!el || el.dataset.fallbackAttempted === '1') return;
+  el.dataset.fallbackAttempted = '1';
+  el.srcset = '';
+  el.src = el.dataset.fallback || el.src;
+}
+
+function updateGalleryAfterIndexChange() {
+  const mainEl = document.getElementById('galleryMain');
+  if (!mainEl || !currentImages.length) return renderGallery();
+
+  const mainImage = currentImages[currentImgIdx];
+  setGalleryLoading(true);
+  setGalleryRetryVisible(false);
+  mainEl.dataset.fallback = mainImage;
+  mainEl.dataset.fallbackAttempted = '0';
+  mainEl.srcset = '';
+  mainEl.src = getResponsiveImageUrl(mainImage, getGalleryMainWidth());
+
+  document.querySelectorAll('#gallery .gallery-thumbs img').forEach((thumb, idx) => {
+    thumb.classList.toggle('active', idx === currentImgIdx);
+  });
+
+  preloadNearbyGalleryImages();
+}
+
+function preloadGalleryImage(src, width) {
+  const key = `${src}|${width}`;
+  if (galleryPreloaded.has(key)) return;
+  galleryPreloaded.add(key);
+  const img = new Image();
+  img.decoding = 'async';
+  img.src = getResponsiveImageUrl(src, width);
+}
+
+function preloadNearbyGalleryImages() {
+  if (!currentImages.length) return;
+  const len = currentImages.length;
+  const prevIdx = (currentImgIdx - 1 + len) % len;
+  const nextIdx = (currentImgIdx + 1) % len;
+  const mainWidth = getGalleryMainWidth();
+  preloadGalleryImage(currentImages[currentImgIdx], mainWidth);
+  if (len > 1) {
+    preloadGalleryImage(currentImages[prevIdx], mainWidth);
+    preloadGalleryImage(currentImages[nextIdx], mainWidth);
+  }
+}
+
+function changeImg(dir) {
+  currentImgIdx = (currentImgIdx + dir + currentImages.length) % currentImages.length;
+  updateGalleryAfterIndexChange();
+}
+
+function setImg(i) {
+  currentImgIdx = i;
+  updateGalleryAfterIndexChange();
+}
+
+function attachGallerySwipeHandlers() {
+  const gallery = document.getElementById('gallery');
+  if (!gallery || gallery.dataset.swipeAttached === '1') return;
+  gallery.dataset.swipeAttached = '1';
+
+  const startSwipe = (x, y) => {
+    gallerySwipeStartX = x;
+    gallerySwipeStartY = y;
+  };
+
+  const endSwipe = (x, y) => {
+    const dx = x - gallerySwipeStartX;
+    const dy = y - gallerySwipeStartY;
+    const absDx = Math.abs(dx);
+    const absDy = Math.abs(dy);
+    if (absDx > 40 && absDx > absDy * 1.2) {
+      if (dx < 0) changeImg(1);
+      else changeImg(-1);
+    }
+  };
+
+  gallery.addEventListener('pointerdown', (event) => {
+    if (event.pointerType !== 'touch' && event.pointerType !== 'pen') return;
+    gallerySwipePointerId = event.pointerId;
+    startSwipe(event.clientX, event.clientY);
+    gallery.setPointerCapture(event.pointerId);
+  }, { passive: true });
+
+  gallery.addEventListener('pointermove', (event) => {
+    if (event.pointerId !== gallerySwipePointerId) return;
+    const dx = Math.abs(event.clientX - gallerySwipeStartX);
+    const dy = Math.abs(event.clientY - gallerySwipeStartY);
+    if (dx > 12 && dx > dy * 1.2) {
+      event.preventDefault();
+    }
+  }, { passive: false });
+
+  gallery.addEventListener('pointerup', (event) => {
+    if (event.pointerId !== gallerySwipePointerId) return;
+    endSwipe(event.clientX, event.clientY);
+    gallerySwipePointerId = null;
+  }, { passive: true });
+
+  gallery.addEventListener('pointercancel', () => {
+    gallerySwipePointerId = null;
+  });
+
+  gallery.addEventListener('touchstart', (event) => {
+    if (!event.touches || !event.touches.length) return;
+    const touch = event.touches[0];
+    startSwipe(touch.clientX, touch.clientY);
+  }, { passive: true });
+
+  gallery.addEventListener('touchmove', (event) => {
+    if (!event.touches || !event.touches.length) return;
+    const touch = event.touches[0];
+    const dx = Math.abs(touch.clientX - gallerySwipeStartX);
+    const dy = Math.abs(touch.clientY - gallerySwipeStartY);
+    if (dx > 12 && dx > dy * 1.2) {
+      event.preventDefault();
+    }
+  }, { passive: false });
+
+  gallery.addEventListener('touchend', (event) => {
+    if (!event.changedTouches || !event.changedTouches.length) return;
+    const touch = event.changedTouches[0];
+    endSwipe(touch.clientX, touch.clientY);
+  }, { passive: true });
+
+  gallery.addEventListener('touchcancel', () => {
+    gallerySwipePointerId = null;
+  });
+}
+
+// ── Payment modal state helpers ───────────────────────────────────
+function payShowStep(step) {
+  ['form','processing','success','error'].forEach(s => {
+    document.getElementById('pay-step-' + s).style.display = s === step ? '' : 'none';
+  });
+  // Disable close button during processing so user can't accidentally close
+  document.getElementById('payModalClose').style.display = step === 'processing' ? 'none' : '';
+}
+
+function payShowError(title, msg) {
+  document.getElementById('pay-error-title').textContent = title;
+  document.getElementById('pay-error-msg').textContent   = msg;
+  payShowStep('error');
+}
+
+async function handleCardPayment() {
+  const product = products.find(p => p.id === currentProductId);
+  if (!product) return;
+  if (getListingType(product) === 'etsy') {
+    showError('Etsy items must be purchased through Etsy.');
+    return;
+  }
+  const listingType = getListingType(product);
+  const availableQty = getInventoryQuantity(product);
+  if (listingType === 'limited' && availableQty === 0) {
+    showError('This item is sold out.');
+    return;
+  }
+
+  // Validate customer info
+  const name = document.getElementById('customer-name').value.trim();
+  const address = document.getElementById('customer-address').value.trim();
+  const city = document.getElementById('customer-city').value.trim();
+  const state = document.getElementById('customer-state').value.trim();
+  const zip = document.getElementById('customer-zip').value.trim();
+  const phone = document.getElementById('customer-phone').value.trim();
+
+  if (!name || !address || !city || !state || !zip || !phone) {
+    showError('Please fill in all customer information fields.');
+    return;
+  }
+
+  const payButton = document.getElementById('sq-pay-button');
+  const debugButton = document.getElementById('debug-fake-pay-button');
+  const errorDiv = document.getElementById('sq-error-message');
+  errorDiv.style.display = 'none';
+  payButton.disabled = true;
+  if (debugButton) debugButton.disabled = true;
+
+  try {
+    payShowStep('processing');
+
+    // Tokenize the card
+    const tokenResult = await squareCard.tokenize();
+    if (tokenResult.status === 'OK') {
+      const nonce = tokenResult.token;
+
+      // Send payment to backend
+      const res = await fetch('/pay', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: nonce,
+          productId: currentProductId,
+          quantity: currentQty,
+          customerName: name,
+          customerAddress: address,
+          customerCity: city,
+          customerState: state,
+          customerZip: zip,
+          customerPhone: phone,
+          selectedVariant: product.selectedVariant || '',
+          selectedColor: product.selectedColor || '',
+          selectedSecondaryColor: product.selectedSecondaryColor || '',
+          selectedPrimaryFilament: product.selectedPrimaryFilament || '',
+          selectedSecondaryFilament: product.selectedSecondaryFilament || ''
+        })
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        const cfgRes = await fetch('/api/config');
+        const cfg = await cfgRes.json();
+
+        applyReceiptFromCheckout(product, currentQty, cfg, data);
+
+        showCheckoutSuccess(product, currentQty);
+      } else {
+        const err = (data.error || '').toLowerCase();
+        if (err.includes('declined')) {
+          showError('Card was declined. Please try another card.');
+        } else if (err.includes('insufficient')) {
+          showError('Insufficient funds. Please try another card.');
+        } else if (err.includes('invalid')) {
+          showError('Invalid card details. Please check and try again.');
+        } else {
+          showError(data.error || 'Payment failed. Please try again.');
+        }
+        payShowStep('form');
+      }
+    } else {
+      showError('Unable to process card. Please try again.');
+      payShowStep('form');
+    }
+  } catch (e) {
+    console.error('Payment error:', e);
+    showError('Connection error. Please try again.');
+    payShowStep('form');
+  } finally {
+    payButton.disabled = false;
+    if (debugButton) debugButton.disabled = false;
+  }
+}
+
+function showError(msg) {
+  const errorDiv = document.getElementById('sq-error-message');
+  errorDiv.textContent = msg;
+  errorDiv.style.display = 'block';
+}
+
+function getCheckoutCustomerInfo() {
+  const name = document.getElementById('customer-name').value.trim();
+  const address = document.getElementById('customer-address').value.trim();
+  const city = document.getElementById('customer-city').value.trim();
+  const state = document.getElementById('customer-state').value.trim();
+  const zip = document.getElementById('customer-zip').value.trim();
+  const phone = document.getElementById('customer-phone').value.trim();
+  return { name, address, city, state, zip, phone };
+}
+
+function applyReceiptFromCheckout(product, qty, cfg, data) {
+  document.getElementById('receipt-product').textContent = formatSelectedProductLabel(product);
+  document.getElementById('receipt-qty').textContent = `× ${qty}`;
+  document.getElementById('receipt-total').textContent = '$' + (parseFloat(product.price) * qty).toFixed(2);
+
+  if (cfg.successShowOrderId) {
+    document.getElementById('receipt-order-id').textContent = data.orderId || '—';
+  } else {
+    document.getElementById('receipt-order-id').parentElement.style.display = 'none';
+  }
+
+  if (cfg.successBody) {
+    document.getElementById('receipt-email-msg').textContent = cfg.successBody;
+  } else {
+    document.getElementById('receipt-email-msg').textContent = 'Thank you for your purchase!';
+  }
+}
+
+async function handleDebugFakePurchase() {
+  if (!storeSettings.debugFakePurchase) return;
+  const product = products.find(p => p.id === currentProductId);
+  if (!product) return;
+
+  const listingType = getListingType(product);
+  const availableQty = getInventoryQuantity(product);
+  if (listingType === 'limited' && availableQty === 0) {
+    showError('This item is sold out.');
+    return;
+  }
+
+  const info = getCheckoutCustomerInfo();
+  if (!info.name || !info.address || !info.city || !info.state || !info.zip || !info.phone) {
+    showError('Please fill in all customer information fields.');
+    return;
+  }
+
+  const debugBtn = document.getElementById('debug-fake-pay-button');
+  const payBtn = document.getElementById('sq-pay-button');
+  const errorDiv = document.getElementById('sq-error-message');
+  errorDiv.style.display = 'none';
+  if (debugBtn) debugBtn.disabled = true;
+  if (payBtn) payBtn.disabled = true;
+
+  try {
+    payShowStep('processing');
+    const res = await fetch('/debug/fake-pay', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        productId: currentProductId,
+        quantity: currentQty,
+        customerName: info.name,
+        customerAddress: info.address,
+        customerCity: info.city,
+        customerState: info.state,
+        customerZip: info.zip,
+        customerPhone: info.phone,
+        selectedVariant: product.selectedVariant || '',
+        selectedColor: product.selectedColor || '',
+        selectedSecondaryColor: product.selectedSecondaryColor || '',
+        selectedPrimaryFilament: product.selectedPrimaryFilament || '',
+        selectedSecondaryFilament: product.selectedSecondaryFilament || ''
+      })
+    });
+
+    const data = await res.json();
+    if (!data.success) {
+      showError(data.error || 'Debug fake purchase failed.');
+      payShowStep('form');
+      return;
+    }
+
+    const cfgRes = await fetch('/api/config');
+    const cfg = await cfgRes.json();
+    applyReceiptFromCheckout(product, currentQty, cfg, data);
+    showCheckoutSuccess(product, currentQty);
+  } catch (err) {
+    console.error('Debug fake purchase error:', err);
+    showError('Debug fake purchase failed. Please try again.');
+    payShowStep('form');
+  } finally {
+    if (debugBtn) debugBtn.disabled = false;
+    if (payBtn) payBtn.disabled = false;
+  }
+}
+
+function showCheckoutSuccess(product, qty) {
+  saveCheckoutDraft(product, qty);
+  closePaymentModalDirect();
+  toggleSuccessTab(true);
+  populateSuccessPage();
+  showPage('success');
+  const url = new URL(window.location);
+  url.searchParams.set('checkout', 'complete');
+  window.history.replaceState({}, '', url.toString());
+}
+
+async function buyNow(id) {
+  if (!storeSettings.storeOpen && !storeSettings.debugFakePurchase) return showToast('The store is currently closed.');
+  const product = products.find(p => p.id === id);
+  if (!product) return showToast('Product not found.');
+  if (getListingType(product) === 'etsy') return openEtsyProduct(id);
+
+  const listingType = getListingType(product);
+  const availableQty = getInventoryQuantity(product);
+  if (listingType === 'limited' && availableQty === 0) return showToast('This item is sold out.');
+
+  const allowedColors = getAllowedColorsForProduct(product);
+  const secondaryColors = getSecondaryColorsForProduct(product);
+  const variants = getProductVariants(product);
+  if (variants.length > 0) {
+    const selectedVariant = document.getElementById('variantSelect') ? document.getElementById('variantSelect').value : '';
+    if (!selectedVariant) {
+      return showToast('Please select a variant before purchasing.');
+    }
+    product.selectedVariant = selectedVariant;
+  } else {
+    product.selectedVariant = '';
+  }
+  if (product.hasColors && allowedColors.length > 0) {
+    const selectedColor = document.getElementById('colorSelect').value;
+    if (!selectedColor) {
+      return showToast('Please select a color before purchasing.');
+    }
+    product.selectedColor = selectedColor;
+  } else {
+    product.selectedColor = '';
+  }
+  if (product.hasSecondaryColor && secondaryColors.length > 0) {
+    const selectedSecondaryColor = document.getElementById('colorSelectSecondary') ? document.getElementById('colorSelectSecondary').value : '';
+    if (!selectedSecondaryColor) {
+      return showToast('Please select a secondary color before purchasing.');
+    }
+    product.selectedSecondaryColor = selectedSecondaryColor;
+  } else {
+    product.selectedSecondaryColor = '';
+  }
+  if (product.hasFilaments) {
+    product.selectedPrimaryFilament = product.material || product.primaryFilament || product.filamentType || 'PLA';
+    product.selectedSecondaryFilament = product.secondaryFilament || product.selectedPrimaryFilament || 'PLA';
+  } else {
+    product.selectedPrimaryFilament = product.material || product.primaryFilament || product.filamentType || '';
+    product.selectedSecondaryFilament = product.secondaryFilament || product.selectedPrimaryFilament || '';
+  }
+
+  currentProductId = id;
+  currentProduct = product;
+  currentQty = 1;
+
+  const totalPrice = (parseFloat(product.price) * currentQty).toFixed(2);
+  const displayName = formatSelectedProductLabel(product);
+
+  document.getElementById('pay-product-name').textContent = displayName;
+  document.getElementById('pay-qty').textContent = '1';
+  document.getElementById('pay-total').textContent = '$' + totalPrice;
+  document.getElementById('pay-button-total').textContent = '$' + totalPrice;
+  const stockNote = document.getElementById('pay-stock-note');
+  if (stockNote) stockNote.textContent = listingType === 'limited' ? `${getStockLabel(product)} available` : 'Unlimited stock';
+
+  const debugBtn = document.getElementById('debug-fake-pay-button');
+  if (debugBtn) debugBtn.style.display = storeSettings.debugFakePurchase ? '' : 'none';
+
+  // Clear form fields
+  document.getElementById('customer-name').value = '';
+  document.getElementById('customer-address').value = '';
+  document.getElementById('customer-city').value = '';
+  document.getElementById('customer-state').value = '';
+  document.getElementById('customer-zip').value = '';
+  document.getElementById('customer-phone').value = '';
+  document.getElementById('sq-error-message').style.display = 'none';
+
+  payShowStep('form');
+  document.getElementById('paymentModalBg').classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  try {
+    if (!squareConfig) {
+      const cfgRes = await fetch('/api/config');
+      squareConfig = await cfgRes.json();
+    }
+    await initSquareWebPayments();
+  } catch (err) {
+    console.error('Square init failed:', err);
+    showToast('⚠️ Unable to load checkout. Please refresh and try again.');
+  }
+}
+
+async function initSquareWebPayments() {
+  try {
+    squarePayments = await Square.payments(window.SQUARE_APP_ID, window.SQUARE_LOCATION_ID);
+
+    if (squareCard) {
+      await squareCard.destroy();
+    }
+
+    squareCard = await squarePayments.card();
+    await squareCard.attach('#sq-card-button');
+
+    const applePayContainer = document.getElementById('apple-pay-container');
+    const googlePayContainer = document.getElementById('google-pay-container');
+    const walletHint = document.getElementById('wallet-hint');
+    const applePayButton = document.getElementById('apple-pay-button');
+    const googlePayButton = document.getElementById('google-pay-button');
+
+    let walletVisible = false;
+    walletHint.style.display = 'none';
+
+    // Apple Pay support
+    if (squareConfig?.enableApplePay) {
+      try {
+        const applePay = await squarePayments.applePay();
+        const canUseApplePay = await applePay.canUse();
+        if (canUseApplePay) {
+          squareApplePay = applePay;
+          applePayContainer.style.display = '';
+          applePayButton.innerHTML = '';
+          await squareApplePay.attach('#apple-pay-button');
+          walletVisible = true;
+        } else {
+          applePayContainer.style.display = 'none';
+        }
+      } catch (appleError) {
+        console.warn('Apple Pay unavailable:', appleError);
+        applePayContainer.style.display = 'none';
+      }
+    } else {
+      applePayContainer.style.display = 'none';
+    }
+
+    // Google Pay support
+    if (squareConfig?.enableGooglePay) {
+      try {
+        const googlePay = await squarePayments.googlePay();
+        const canUseGooglePay = await googlePay.canUse();
+        if (canUseGooglePay) {
+          squareGooglePay = googlePay;
+          googlePayContainer.style.display = '';
+          googlePayButton.innerHTML = '';
+          await squareGooglePay.attach('#google-pay-button');
+          walletVisible = true;
+        } else {
+          googlePayContainer.style.display = 'none';
+        }
+      } catch (googleError) {
+        console.warn('Google Pay unavailable:', googleError);
+        googlePayContainer.style.display = 'none';
+      }
+    } else {
+      googlePayContainer.style.display = 'none';
+    }
+
+    if (!walletVisible) {
+      if (squareConfig?.enableApplePay || squareConfig?.enableGooglePay) {
+        walletHint.textContent = 'Wallet payments appear here when supported by your browser: Safari/iOS for Apple Pay, Chrome/Android for Google Pay.';
+        walletHint.style.display = '';
+      } else {
+        walletHint.style.display = 'none';
+      }
+    }
+  } catch (err) {
+    console.error('Failed to initialize Web Payments SDK:', err);
+    showError('Payment system unavailable. Please try again.');
+  }
+}
+
+async function handleApplePay() {
+  const product = products.find(p => p.id === currentProductId);
+  if (!product) return;
+
+  const name = document.getElementById('customer-name').value.trim();
+  const address = document.getElementById('customer-address').value.trim();
+  const city = document.getElementById('customer-city').value.trim();
+  const state = document.getElementById('customer-state').value.trim();
+  const zip = document.getElementById('customer-zip').value.trim();
+  const phone = document.getElementById('customer-phone').value.trim();
+
+  if (!name || !address || !city || !state || !zip || !phone) {
+    showError('Please fill in all customer information fields before using Apple Pay.');
+    return;
+  }
+
+  if (!squareApplePay) {
+    showError('Apple Pay is not available on this device.');
+    return;
+  }
+
+  payShowStep('processing');
+  try {
+    const tokenResult = await squareApplePay.tokenize({
+      billingContact: {
+        familyName: name,
+        givenName: name,
+        email: '',
+        phone: phone,
+        country: 'US',
+        administrativeDistrictLevel1: state,
+        locality: city,
+        postalCode: zip,
+        addressLines: [address]
+      },
+      shippingContact: {
+        familyName: name,
+        givenName: name,
+        phone: phone,
+        country: 'US',
+        administrativeDistrictLevel1: state,
+        locality: city,
+        postalCode: zip,
+        addressLines: [address]
+      }
+    });
+
+    if (tokenResult.status === 'OK') {
+      const nonce = tokenResult.token;
+      const res = await fetch('/pay', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: nonce,
+          productId: currentProductId,
+          quantity: currentQty,
+          customerName: name,
+          customerAddress: address,
+          customerCity: city,
+          customerState: state,
+          customerZip: zip,
+          customerPhone: phone,
+          selectedVariant: product.selectedVariant || '',
+          selectedColor: product.selectedColor || '',
+          selectedSecondaryColor: product.selectedSecondaryColor || '',
+          selectedPrimaryFilament: product.selectedPrimaryFilament || '',
+          selectedSecondaryFilament: product.selectedSecondaryFilament || ''
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        const cfgRes = await fetch('/api/config');
+        const cfg = await cfgRes.json();
+
+        document.getElementById('receipt-product').textContent = formatSelectedProductLabel(product);
+        document.getElementById('receipt-qty').textContent = `× ${currentQty}`;
+        document.getElementById('receipt-total').textContent = '$' + (parseFloat(product.price) * currentQty).toFixed(2);
+
+        if (cfg.successShowOrderId) {
+          document.getElementById('receipt-order-id').textContent = data.orderId || '—';
+        } else {
+          document.getElementById('receipt-order-id').parentElement.style.display = 'none';
+        }
+
+        if (cfg.successBody) {
+          document.getElementById('receipt-email-msg').textContent = cfg.successBody;
+        } else {
+          document.getElementById('receipt-email-msg').textContent = 'Thank you for your purchase!';
+        }
+
+        showCheckoutSuccess(product, currentQty);
+      } else {
+        const err = (data.error || '').toLowerCase();
+        if (err.includes('declined')) {
+          showError('Payment was declined. Please try another method.');
+        } else {
+          showError(data.error || 'Payment failed. Please try again.');
+        }
+        payShowStep('form');
+      }
+    } else {
+      showError('Apple Pay authorization failed. Please try again.');
+      payShowStep('form');
+    }
+  } catch (err) {
+    console.error('Apple Pay error:', err);
+    showError('Apple Pay could not complete. Please try again or use card payment.');
+    payShowStep('form');
+  }
+}
+
+// ── Toast notifications ───────────────────────────────────────────────────────
+function showToast(msg) {
+  const toast = document.createElement('div');
+  toast.style.cssText = `
+    position: fixed; bottom: 20px; left: 20px; right: 20px; max-width: 400px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 1rem; color: var(--text); font-size: 0.95rem; z-index: 9999;
+    animation: slideUp 0.3s ease;
+  `;
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'slideDown 0.3s ease';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+// ── Modal functions ───────────────────────────────────────────────────────────
+function closeModal(e)  { if (e.target === document.getElementById('modalBg')) closeModalDirect(); }
+function closeModalDirect() { document.getElementById('modalBg').classList.remove('open'); document.body.style.overflow = ''; }
+
+function closePaymentModal(e)  {
+  if (e.target === document.getElementById('paymentModalBg')) closePaymentModalDirect();
+}
+function closePaymentModalDirect() {
+  // Don't close during processing
+  const processing = document.getElementById('pay-step-processing');
+  if (processing && processing.style.display !== 'none') return;
+  document.getElementById('paymentModalBg').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModalDirect(); });
+
+// ── Keyboard image nav ────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('modalBg').classList.contains('open')) return;
+  if (e.key === 'ArrowRight') changeImg(1);
+  if (e.key === 'ArrowLeft')  changeImg(-1);
+});
+
+// ── Escape HTML helper ────────────────────────────────────────────
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+init();
+</script>
+</body>
+</html>

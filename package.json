@@ -1,0 +1,23 @@
+{
+  "name": "store-v2",
+  "version": "2.0.0",
+  "description": "Store v2 — drag-to-order images, contact tab, analytics, Tailscale-ready",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "start:strict": "STRICT_SINGLE_INSTANCE=true SINGLE_INSTANCE_MODE=replace node server.js",
+    "dev": "node --watch server.js",
+    "dev:strict": "STRICT_SINGLE_INSTANCE=true SINGLE_INSTANCE_MODE=replace node --watch server.js",
+    "tailscale:up": "tailscale up"
+  },
+  "dependencies": {
+    "compression": "^1.8.1",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^8.0.7",
+    "sharp": "^0.34.5",
+    "square": "^44.0.1"
+  }
+}

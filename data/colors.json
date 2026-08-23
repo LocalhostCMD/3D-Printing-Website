@@ -1,0 +1,22 @@
+[
+  {
+    "name": "Red",
+    "defaultFilament": "PLA"
+  },
+  {
+    "name": "Blue",
+    "defaultFilament": "PLA"
+  },
+  {
+    "name": "Black",
+    "defaultFilament": "PLA"
+  },
+  {
+    "name": "White",
+    "defaultFilament": "PLA"
+  },
+  {
+    "name": "Candy Rainbow",
+    "defaultFilament": "PLA"
+  }
+]

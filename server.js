@@ -529,7 +529,7 @@ function loadContact() {
       { label: 'YouTube', url: 'https://youtube.com/@LocalhostWasTaken' },
       { label: 'GitHub', url: 'https://github.com/LocalhostCMD' }
     ],
-    resume: { enabled: false, title: 'Resume', summary: '', url: '' },
+    resume: { enabled: false, title: 'Resume', summary: '', url: '' }, youtubeEnabled: false,
     interests: ['IT & Networking', 'Engineering & Making', 'Robotics', '3D Printing & Modeling', 'Electronics & PCB Design', 'Laser Cutting & Fabrication', 'Homelabs & Servers', 'Self-hosting & Web Projects', 'CNC Machining'],
     email: 'odinandmilo@proton.me', phone: '', instagram: '', etsy: '', youtube: '', github: '', custom: ''
   };
@@ -543,7 +543,8 @@ function loadContact() {
     email: String(loaded.email || defaults.email),
     links: (Array.isArray(loaded.links) ? loaded.links : defaults.links).filter(link => String(link && link.label || '').trim().toLowerCase() !== 'website'),
     interests: Array.isArray(loaded.interests) ? loaded.interests : defaults.interests,
-    resume: { ...defaults.resume, ...(loaded.resume && typeof loaded.resume === 'object' ? loaded.resume : {}) }
+    resume: { ...defaults.resume, ...(loaded.resume && typeof loaded.resume === 'object' ? loaded.resume : {}) },
+    youtubeEnabled: loaded.youtubeEnabled === true
   };
 }
 
@@ -1775,7 +1776,7 @@ app.get('/healthz', (req, res) => {
 
 // Admin: save contact info
 app.put('/api/contact', requireAdminAction, (req, res) => {
-  const { name, role, bio, avatar, email, phone, instagram, etsy, youtube, github, links, custom, resume } = req.body;
+  const { name, role, bio, avatar, email, phone, instagram, etsy, youtube, github, links, custom, resume, youtubeEnabled } = req.body;
   const normalizedLinks = Array.isArray(links)
     ? links.slice(0, 12).map(link => ({
       label: String(link && link.label || '').trim().slice(0, 40),
@@ -1786,7 +1787,7 @@ app.put('/api/contact', requireAdminAction, (req, res) => {
     name: String(name || '').trim().slice(0, 80), role: String(role || '').trim().slice(0, 100),
     bio: String(bio || '').trim().slice(0, 1000), avatar: String(avatar || '').trim().slice(0, 500),
     email: email || '', phone: phone || '', instagram: instagram || '', etsy: etsy || '',
-    youtube: youtube || '', github: github || '', links: normalizedLinks, custom: custom || '',
+    youtube: youtube || '', github: github || '', links: normalizedLinks, custom: custom || '', youtubeEnabled: youtubeEnabled === true,
     resume: {
       enabled: resume && (resume.enabled === true || resume.enabled === 'true'),
       title: String(resume && resume.title || 'Resume').trim().slice(0, 80),

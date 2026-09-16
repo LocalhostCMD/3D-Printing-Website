@@ -865,6 +865,7 @@
         <div class="field"><label>About me</label><textarea id="cBio" rows="4" placeholder="Tell people who you are and what you make."></textarea></div>
         <div class="field"><label>Profile photo</label><div class="upload-zone"><input type="file" id="cAvatar" accept="image/*" onchange="uploadContactAvatar(this)"/><div class="upload-zone-icon">◎</div><p>Choose a square image for your NFC profile</p></div><div id="avatarStatus" class="contact-hint"></div></div>
         <div class="field"><label>Social links</label><div id="contactLinks"></div><button type="button" class="btn-secondary" onclick="addContactLink()">+ Add another link</button><div class="contact-hint">Use any platform: YouTube, GitHub, Instagram, Etsy, TikTok, LinkedIn, or your own site.</div></div>
+        <div class="field"><label>YouTube visibility</label><label style="display:flex;align-items:center;gap:0.55rem;text-transform:none;letter-spacing:0;color:var(--text);font-size:0.9rem;"><input type="checkbox" id="cYoutubeEnabled"/> Show YouTube on the public Contact page</label></div>
         <div class="field"><label>Resume</label><label style="display:flex;align-items:center;gap:0.55rem;text-transform:none;letter-spacing:0;color:var(--text);font-size:0.9rem;"><input type="checkbox" id="cResumeEnabled"/> Show resume on public Contact page</label><input type="text" id="cResumeTitle" placeholder="Resume section title"/><textarea id="cResumeSummary" rows="3" placeholder="Short description for your resume"></textarea><input type="url" id="cResumeUrl" placeholder="https://.../resume.pdf"/><div class="contact-hint">Future-ready: paste a hosted PDF or resume page URL. Leave disabled until you are ready to publish it.</div></div>
         <div class="field">
           <label>Email Address</label>
@@ -2367,6 +2368,7 @@ async function loadContact() {
   document.getElementById('cName').value       = c.name      || '';
   document.getElementById('cRole').value       = c.role      || '';
   document.getElementById('cBio').value        = c.bio       || '';
+  document.getElementById('cYoutubeEnabled').checked = c.youtubeEnabled === true;
   document.getElementById('cResumeEnabled').checked = Boolean(c.resume && c.resume.enabled);
   document.getElementById('cResumeTitle').value = c.resume && c.resume.title || 'Resume';
   document.getElementById('cResumeSummary').value = c.resume && c.resume.summary || '';
@@ -2389,6 +2391,7 @@ async function saveContact() {
     name:      document.getElementById('cName').value.trim(),
     role:      document.getElementById('cRole').value.trim(),
     bio:       document.getElementById('cBio').value.trim(),
+    youtubeEnabled: document.getElementById('cYoutubeEnabled').checked,
     resume: {
       enabled: document.getElementById('cResumeEnabled').checked,
       title: document.getElementById('cResumeTitle').value.trim(),

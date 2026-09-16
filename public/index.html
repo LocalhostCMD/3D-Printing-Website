@@ -1388,7 +1388,7 @@ function renderContact() {
     : `<div class="profile-avatar profile-avatar-fallback">${esc((c.name || 'Y').slice(0, 1).toUpperCase())}</div>`;
   const emailLink = c.email ? `<a class="profile-link" href="mailto:${esc(c.email)}">✉ OdinAndMilo@Proton.Me</a>` : '';
   const phoneLink = c.phone ? `<a class="profile-link" href="tel:${esc(c.phone)}">☎ ${esc(c.phone)}</a>` : '';
-  document.getElementById('profileLinks').innerHTML = emailLink + phoneLink + (Array.isArray(c.links) ? c.links : []).map(link => {
+  document.getElementById('profileLinks').innerHTML = emailLink + phoneLink + (Array.isArray(c.links) ? c.links : []).filter(link => c.youtubeEnabled !== false || String(link.label || '').trim().toLowerCase() !== 'youtube').map(link => {
     const url = getSafeExternalUrl(link.url, null);
     return url ? `<a class="profile-link" href="${esc(url)}" target="_blank" rel="noopener noreferrer">↗ ${esc(link.label)}</a>` : '';
   }).join('');

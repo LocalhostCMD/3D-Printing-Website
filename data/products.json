@@ -56,7 +56,7 @@
     "id": "1778266149071",
     "name": "E-Waste Recycling",
     "price": 0,
-    "description": "Have Old laptops, Tablets, Computers?\r\nI will recycle the parts for you and make sure all data is wiped from the devices so you don't need to worry about someone getting your data.",
+    "description": "Have Old laptops, Tablets, Computers?\r\nI will recycle the parts for you and make sure all data is wiped from the devices so you don't need to worry about someone getting your data.  Please message me directly at 503-267-4785 to discuss ewaste",
     "images": [
       "/uploads/1778266501896-89c648b6db94.webp"
     ],
@@ -66,11 +66,11 @@
     "etsyUrl": "",
     "notes": "",
     "hasSecondaryColor": false,
-    "hasFilaments": false,
-    "material": "",
-    "filamentType": "",
-    "primaryFilament": "",
-    "secondaryFilament": "",
+    "hasFilaments": true,
+    "material": "PLA",
+    "filamentType": "PLA",
+    "primaryFilament": "PLA",
+    "secondaryFilament": "PLA",
     "variants": []
   },
   {

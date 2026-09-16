@@ -314,6 +314,16 @@ function enforceSingleInstance() {
 
 function findPidsListeningOnPort(port) {
   try {
+    if (process.platform === 'win32') {
+      const output = execSync('netstat -ano -p TCP', {
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore']
+      });
+      const portPattern = new RegExp(`^\\s*TCP\\s+[^\\s]+:${port}\\s+[^\\s]+\\s+LISTENING\\s+(\\d+)`, 'im');
+      const match = output.match(portPattern);
+      return match ? [parseInt(match[1], 10)] : [];
+    }
+
     const out = execSync(`ss -ltnp 'sport = :${port}' 2>/dev/null || true`, {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'ignore']
@@ -510,7 +520,31 @@ function saveSettings(data) {
 }
 
 function loadContact() {
-  return loadJSON(CONTACT_FILE, { email: '', phone: '', instagram: '', etsy: '', custom: '' });
+  const defaults = {
+    name: 'Miles Hollingsworth',
+    role: 'Maker, technologist, and high school senior',
+    bio: 'I build, test, and improve practical technology projects across IT, networking, engineering, electronics, robotics, and 3D fabrication. I am graduating from Grant High School in 2027 and building a portfolio of work I am proud of.',
+    avatar: '', email: 'odinandmilo@proton.me', phone: '',
+    links: [
+      { label: 'YouTube', url: 'https://youtube.com/@LocalhostWasTaken' },
+      { label: 'GitHub', url: 'https://github.com/LocalhostCMD' }
+    ],
+    resume: { enabled: false, title: 'Resume', summary: '', url: '' },
+    interests: ['IT & Networking', 'Engineering & Making', 'Robotics', '3D Printing & Modeling', 'Electronics & PCB Design', 'Laser Cutting & Fabrication', 'Homelabs & Servers', 'Self-hosting & Web Projects', 'CNC Machining'],
+    email: 'odinandmilo@proton.me', phone: '', instagram: '', etsy: '', youtube: '', github: '', custom: ''
+  };
+  const loaded = loadJSON(CONTACT_FILE, {});
+  return {
+    ...defaults,
+    ...loaded,
+    name: String(loaded.name || defaults.name),
+    role: String(loaded.role || defaults.role),
+    bio: String(loaded.bio || defaults.bio),
+    email: String(loaded.email || defaults.email),
+    links: (Array.isArray(loaded.links) ? loaded.links : defaults.links).filter(link => String(link && link.label || '').trim().toLowerCase() !== 'website'),
+    interests: Array.isArray(loaded.interests) ? loaded.interests : defaults.interests,
+    resume: { ...defaults.resume, ...(loaded.resume && typeof loaded.resume === 'object' ? loaded.resume : {}) }
+  };
 }
 
 function saveContact(data) {
@@ -1741,9 +1775,40 @@ app.get('/healthz', (req, res) => {
 
 // Admin: save contact info
 app.put('/api/contact', requireAdminAction, (req, res) => {
-  const { email, phone, instagram, etsy, custom } = req.body;
-  saveContact({ email: email || '', phone: phone || '', instagram: instagram || '', etsy: etsy || '', custom: custom || '' });
+  const { name, role, bio, avatar, email, phone, instagram, etsy, youtube, github, links, custom, resume } = req.body;
+  const normalizedLinks = Array.isArray(links)
+    ? links.slice(0, 12).map(link => ({
+      label: String(link && link.label || '').trim().slice(0, 40),
+      url: String(link && link.url || '').trim().slice(0, 500)
+    })).filter(link => link.label && link.url)
+    : [];
+  saveContact({
+    name: String(name || '').trim().slice(0, 80), role: String(role || '').trim().slice(0, 100),
+    bio: String(bio || '').trim().slice(0, 1000), avatar: String(avatar || '').trim().slice(0, 500),
+    email: email || '', phone: phone || '', instagram: instagram || '', etsy: etsy || '',
+    youtube: youtube || '', github: github || '', links: normalizedLinks, custom: custom || '',
+    resume: {
+      enabled: resume && (resume.enabled === true || resume.enabled === 'true'),
+      title: String(resume && resume.title || 'Resume').trim().slice(0, 80),
+      summary: String(resume && resume.summary || '').trim().slice(0, 300),
+      url: String(resume && resume.url || '').trim().slice(0, 500)
+    }
+  });
   res.json({ success: true });
+});
+
+app.post('/api/contact/avatar', requireAdminAction, upload.single('avatar'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'Please choose an image.' });
+  try {
+    const [avatarUrl] = await processUploadBatch([req.file]);
+    const contact = loadContact();
+    contact.avatar = avatarUrl;
+    saveContact(contact);
+    res.json({ success: true, avatar: avatarUrl });
+  } catch (err) {
+    console.error('Avatar upload error:', err);
+    res.status(500).json({ error: 'Avatar upload failed.' });
+  }
 });
 
 app.get('/api/logs', requireLogin, (req, res) => {

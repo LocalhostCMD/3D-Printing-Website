@@ -277,6 +277,8 @@
     /* ── Contact form ── */
     .contact-admin-form .field { margin-bottom: 1.2rem; }
     .contact-hint { font-size: 0.78rem; color: var(--muted); margin-top: 0.3rem; }
+    .profile-link-row { display: grid; grid-template-columns: 0.7fr 1.3fr auto; gap: 0.6rem; margin-bottom: 0.6rem; }
+    @media (max-width: 600px) { .profile-link-row { grid-template-columns: 1fr; } }
 
     /* ── Library tab ── */
     .lib-toolbar { display: flex; gap: 0.8rem; align-items: center; margin-bottom: 1.2rem; flex-wrap: wrap; }
@@ -517,6 +519,46 @@
         min-width: 0;
       }
     }
+
+    /* ── Current admin theme ── */
+    :root {
+      --bg: #0d141b; --surface: #17222d; --surface2: #202e3a;
+      --gold: #d5a35a; --gold-light: #f1c878;
+      --text: #f1ede5; --muted: #9aa8b2; --border: #30404d;
+      --danger: #e6847b; --success: #7ac7a2;
+    }
+    body { background: linear-gradient(135deg, #0d141b 0%, #14202b 55%, #1d2b36 100%); }
+    header { height: 64px; background: rgba(9,14,19,0.96); border-bottom-color: #2a3945; }
+    .logo { color: var(--gold-light); letter-spacing: 0.02em; }
+    .btn-sm { border-color: #3a4b58; color: #c3ced3; }
+    .btn-sm:hover { border-color: var(--gold); color: var(--gold-light); }
+    .tab-nav { top: 64px; background: rgba(12,19,26,0.97); border-bottom-color: #2a3945; }
+    .tab-btn { color: #9aa8b2; }
+    .tab-btn.active, .tab-btn:hover { color: var(--gold-light); }
+    .container { max-width: 1180px; }
+    .dashboard-hero { background: linear-gradient(135deg, rgba(32,46,58,0.95), rgba(23,34,45,0.9)); border-color: #3b4d5a; box-shadow: 0 18px 40px rgba(0,0,0,0.2); border-radius: 16px; }
+    .dashboard-hero h1, .page-title { color: var(--gold-light); }
+    .card { background: rgba(23,34,45,0.94); border-color: #30404d; border-radius: 14px; box-shadow: 0 12px 28px rgba(0,0,0,0.18); }
+    .card h2 { color: var(--gold-light); }
+    input[type=text], input[type=number], input[type=email], input[type=tel], input[type=url], textarea, select { background: #101a23; border-color: #344652; color: var(--text); }
+    input:focus, textarea:focus, select:focus { border-color: var(--gold) !important; box-shadow: 0 0 0 3px rgba(213,163,90,0.1); }
+    .btn-primary { background: var(--gold); color: #182029; border-radius: 9px; }
+    .btn-primary:hover { background: var(--gold-light); filter: none; }
+    .btn-secondary { background: #202e3a; border-color: #3a4b58; color: #d3dce0; border-radius: 9px; }
+    .btn-secondary:hover { border-color: var(--gold); color: var(--gold-light); }
+    .product-menu-btn.active { color: var(--gold-light); border-color: rgba(213,163,90,0.5); background: rgba(213,163,90,0.1); }
+    .product-row, .stat-box { background: #17232d; border-color: #30404d; }
+    .product-row:hover { border-color: #526675; }
+    .upload-zone:hover, .library-btn-zone:hover { border-color: var(--gold); background: rgba(213,163,90,0.06); }
+    .upload-zone span, .upload-zone p span, .contact-hint { color: #b7a276; }
+    .lib-search { background: #101a23; border-color: #344652; color: var(--text); }
+    .profile-link-row input { min-width: 0; }
+
+    /* These controls belonged to the old wallpaper/fixed-social implementation. */
+    #tab-settings .field:has(#wallpaperUrl), #tab-settings .field:has(#frostedOnBtn),
+    #tab-contact .field:has(#cInstagram), #tab-contact .field:has(#cEtsy),
+    #tab-contact .field:has(#cYoutube), #tab-contact .field:has(#cGithub),
+    #tab-contact .field:has(#cCustom) { display: none; }
   </style>
 </head>
 <body>
@@ -531,21 +573,21 @@
 
 <!-- ── Tab Nav ── -->
 <nav class="tab-nav">
-  <button class="tab-btn active" onclick="showTab('products', event)">📦 Products</button>
+  <button class="tab-btn active" onclick="showTab('products', event)">📦 Listings</button>
+  <button class="tab-btn"        onclick="showTab('contact', event)">◉ Profile</button>
+  <button class="tab-btn"        onclick="showTab('library')">🗂️ Media</button>
   <button class="tab-btn"        onclick="showTab('materials', event)">🧩 Materials</button>
   <button class="tab-btn"        onclick="showTab('analytics', event)">📊 Analytics</button>
-  <button class="tab-btn"        onclick="showTab('logs', event)">🪵 Logs</button>
   <button class="tab-btn"        onclick="showTab('settings', event)">⚙️ Settings</button>
-  <button class="tab-btn"        onclick="showTab('contact', event)">📬 Contact</button>
-  <button class="tab-btn"        onclick="showTab('library')">🗂️ Image Library</button>
+  <button class="tab-btn"        onclick="showTab('logs', event)">🪵 Logs</button>
 </nav>
 
 <div class="container hero-shell">
   <section class="dashboard-hero" aria-label="Admin dashboard introduction">
     <div>
       <div class="hero-kicker">Store control</div>
-      <h1>Run the store from one place.</h1>
-      <p>Products, media, analytics, and settings stay in one tidy workflow.</p>
+      <h1>Store control, without the clutter.</h1>
+      <p>Manage listings, your public profile, media, and the settings that actually affect shoppers.</p>
     </div>
     <div class="hero-actions">
       <button class="btn-primary" onclick="showTab('products', event)">Add Product</button>
@@ -815,10 +857,15 @@
 <div class="tab-page" id="tab-contact">
   <div class="container">
     <div class="page-title">Contact Info</div>
-    <div class="page-sub">This info is shown on the Contact tab of your storefront.</div>
+    <div class="page-sub">Build the profile your NFC card opens. Changes appear on the public Contact page.</div>
     <div class="card">
-      <h2>📬 Your Contact Details</h2>
+      <h2>◉ Profile</h2>
       <div class="contact-admin-form">
+        <div class="form-row"><div class="field"><label>Name</label><input type="text" id="cName" placeholder="Your name or studio"/></div><div class="field"><label>Role / tagline</label><input type="text" id="cRole" placeholder="Designer, maker, creator"/></div></div>
+        <div class="field"><label>About me</label><textarea id="cBio" rows="4" placeholder="Tell people who you are and what you make."></textarea></div>
+        <div class="field"><label>Profile photo</label><div class="upload-zone"><input type="file" id="cAvatar" accept="image/*" onchange="uploadContactAvatar(this)"/><div class="upload-zone-icon">◎</div><p>Choose a square image for your NFC profile</p></div><div id="avatarStatus" class="contact-hint"></div></div>
+        <div class="field"><label>Social links</label><div id="contactLinks"></div><button type="button" class="btn-secondary" onclick="addContactLink()">+ Add another link</button><div class="contact-hint">Use any platform: YouTube, GitHub, Instagram, Etsy, TikTok, LinkedIn, or your own site.</div></div>
+        <div class="field"><label>Resume</label><label style="display:flex;align-items:center;gap:0.55rem;text-transform:none;letter-spacing:0;color:var(--text);font-size:0.9rem;"><input type="checkbox" id="cResumeEnabled"/> Show resume on public Contact page</label><input type="text" id="cResumeTitle" placeholder="Resume section title"/><textarea id="cResumeSummary" rows="3" placeholder="Short description for your resume"></textarea><input type="url" id="cResumeUrl" placeholder="https://.../resume.pdf"/><div class="contact-hint">Future-ready: paste a hosted PDF or resume page URL. Leave disabled until you are ready to publish it.</div></div>
         <div class="field">
           <label>Email Address</label>
           <input type="email" id="cEmail" placeholder="you@example.com"/>
@@ -836,6 +883,16 @@
           <label>Etsy Shop Name</label>
           <input type="text" id="cEtsy" placeholder="MyEtsyShop"/>
           <div class="contact-hint">Your Etsy shop name (e.g. MyEtsyShop). Link to etsy.com/shop/... is auto-generated.</div>
+        </div>
+        <div class="field">
+          <label>YouTube Channel</label>
+          <input type="url" id="cYoutube" placeholder="https://youtube.com/@yourchannel"/>
+          <div class="contact-hint">Paste the full URL to your YouTube channel.</div>
+        </div>
+        <div class="field">
+          <label>GitHub Profile</label>
+          <input type="url" id="cGithub" placeholder="https://github.com/yourusername"/>
+          <div class="contact-hint">Paste the full URL to your GitHub profile.</div>
         </div>
         <div class="field">
           <label>Custom HTML Block</label>
@@ -2307,25 +2364,67 @@ async function saveSettings() {
 async function loadContact() {
   const res = await adminFetch('/api/contact');
   const c   = await res.json();
+  document.getElementById('cName').value       = c.name      || '';
+  document.getElementById('cRole').value       = c.role      || '';
+  document.getElementById('cBio').value        = c.bio       || '';
+  document.getElementById('cResumeEnabled').checked = Boolean(c.resume && c.resume.enabled);
+  document.getElementById('cResumeTitle').value = c.resume && c.resume.title || 'Resume';
+  document.getElementById('cResumeSummary').value = c.resume && c.resume.summary || '';
+  document.getElementById('cResumeUrl').value = c.resume && c.resume.url || '';
+  document.getElementById('avatarStatus').textContent = c.avatar ? 'Profile photo uploaded.' : 'No profile photo selected.';
+  document.getElementById('contactLinks').innerHTML = '';
+  (Array.isArray(c.links) ? c.links : []).forEach(link => addContactLink(link.label, link.url));
   document.getElementById('cEmail').value     = c.email     || '';
   document.getElementById('cPhone').value     = c.phone     || '';
   document.getElementById('cInstagram').value = c.instagram || '';
   document.getElementById('cEtsy').value      = c.etsy      || '';
+  document.getElementById('cYoutube').value   = c.youtube   || '';
+  document.getElementById('cGithub').value    = c.github    || '';
   document.getElementById('cCustom').value    = c.custom    || '';
 }
 
 async function saveContact() {
+  const links = Array.from(document.querySelectorAll('.profile-link-row')).map(row => ({ label: row.querySelector('.link-label').value.trim(), url: row.querySelector('.link-url').value.trim() })).filter(link => link.label && link.url);
   const body = {
+    name:      document.getElementById('cName').value.trim(),
+    role:      document.getElementById('cRole').value.trim(),
+    bio:       document.getElementById('cBio').value.trim(),
+    resume: {
+      enabled: document.getElementById('cResumeEnabled').checked,
+      title: document.getElementById('cResumeTitle').value.trim(),
+      summary: document.getElementById('cResumeSummary').value.trim(),
+      url: document.getElementById('cResumeUrl').value.trim()
+    },
+    links,
     email:     document.getElementById('cEmail').value.trim(),
     phone:     document.getElementById('cPhone').value.trim(),
     instagram: document.getElementById('cInstagram').value.trim(),
     etsy:      document.getElementById('cEtsy').value.trim(),
+    youtube:   document.getElementById('cYoutube').value.trim(),
+    github:    document.getElementById('cGithub').value.trim(),
     custom:    document.getElementById('cCustom').value.trim()
   };
   const res  = await adminFetch('/api/contact', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   const data = await res.json();
   if (data.success) showToast('✅ Contact info saved!');
   else showToast('❌ Save failed.');
+}
+
+function addContactLink(label = '', url = '') {
+  const row = document.createElement('div');
+  row.className = 'profile-link-row';
+  row.innerHTML = `<input class="link-label" type="text" placeholder="Label (e.g. Instagram)" value="${esc(label)}"/><input class="link-url" type="url" placeholder="https://..." value="${esc(url)}"/><button type="button" class="btn-danger" onclick="this.parentElement.remove()">Remove</button>`;
+  document.getElementById('contactLinks').appendChild(row);
+}
+
+async function uploadContactAvatar(input) {
+  if (!input.files.length) return;
+  const formData = new FormData();
+  formData.append('avatar', input.files[0]);
+  try {
+    const result = await uploadFormDataWithProgress('/api/contact/avatar', formData, { label: 'Uploading profile photo…' });
+    document.getElementById('avatarStatus').textContent = result.data.success ? 'Profile photo uploaded.' : (result.data.error || 'Upload failed.');
+  } catch (err) { document.getElementById('avatarStatus').textContent = err.message || 'Upload failed.'; }
 }
 
 // ── Toast ─────────────────────────────────────────────────────────

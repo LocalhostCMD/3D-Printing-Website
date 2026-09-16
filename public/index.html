@@ -9,22 +9,19 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #0f0e0c; --surface: #1a1916; --surface2: #232220;
-      --gold: #c9a84c; --gold-light: #e8c97a;
-      --text: #f0ece4; --muted: #888580; --border: #2e2c28;
+      --bg: #111820; --surface: #1b2530; --surface2: #263440;
+      --gold: #d5a35a; --gold-light: #f1c878;
+      --text: #f1ede5; --muted: #9ca8b1; --border: #34434f;
     }
     body {
-      background:
-        radial-gradient(circle at top left, rgba(201,168,76,0.14), transparent 36%),
-        radial-gradient(circle at top right, rgba(255,255,255,0.06), transparent 28%),
-        linear-gradient(180deg, #11100d 0%, #0b0a09 100%);
+      background: linear-gradient(135deg, #0d141b 0%, #151f29 52%, #202d38 100%);
       color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; position: relative;
       overflow-x: hidden;
     }
 
     /* ── Header ── */
     header {
-      background: var(--surface); border-bottom: 1px solid var(--border);
+      background: rgba(9,14,19,0.96); border-bottom: 1px solid #293641; backdrop-filter: blur(16px);
       padding: 0 2rem; display: flex; align-items: center; justify-content: space-between;
       height: 72px; position: sticky; top: 0; z-index: 100;
     }
@@ -39,6 +36,8 @@
     }
     header nav a:hover, .nav-btn:hover, .nav-btn.active { color: var(--gold); }
     .nav-btn.active { color: var(--gold); }
+    header nav a, header .nav-btn { color: #d6dee3; }
+    header .mobile-menu-toggle { color: #e9eef0; border-color: rgba(233,238,240,0.26); background: rgba(233,238,240,0.08); }
     .store-banner { display: none; max-width: 1200px; margin: 1rem auto 0; padding: 0.95rem 1.25rem; border-radius: 12px; background: rgba(201,168,76,0.12); border: 1px solid rgba(201,168,76,0.25); color: var(--text); text-align: center; font-size: 0.95rem; }
     .btn-add-cart { width: 100%; margin-top: 0.85rem; background: transparent; color: var(--gold); border: 1px solid var(--gold); border-radius: 10px; padding: 0.85rem; cursor: pointer; font-size: 0.95rem; }
     .btn-add-cart:hover { background: var(--gold); color: #0f0e0c; }
@@ -53,11 +52,6 @@
     .hero {
       text-align: center; padding: 88px 2rem 58px; position: relative; isolation: isolate;
     }
-    .hero::before, .hero::after {
-      content: ''; position: absolute; inset: auto; border-radius: 999px; filter: blur(8px); opacity: 0.75; pointer-events: none;
-    }
-    .hero::before { width: 220px; height: 220px; background: rgba(201,168,76,0.12); top: 18px; left: 8%; }
-    .hero::after  { width: 280px; height: 280px; background: rgba(255,255,255,0.05); top: 0; right: 5%; }
     .hero > * { position: relative; z-index: 1; }
     .hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(2.2rem, 5vw, 4rem); color: var(--gold-light); margin-bottom: 1rem; line-height: 1.15; }
     .hero p  { color: var(--muted); font-size: 1.05rem; max-width: 560px; margin: 0 auto; }
@@ -83,8 +77,8 @@
 
     /* ── Product Card ── */
     .card {
-      background: linear-gradient(180deg, rgba(26,25,22,0.95), rgba(20,19,17,0.96));
-      border: 1px solid var(--border); border-radius: 18px;
+      background: rgba(255,255,255,0.96);
+      border: 1px solid var(--border); border-radius: 12px;
       overflow: hidden; cursor: pointer; transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s, background 0.25s;
       position: relative;
     }
@@ -197,24 +191,68 @@
     .modal-meta { display: flex; flex-wrap: wrap; gap: 0.55rem; margin-bottom: 1rem; }
     .modal-stock { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.42rem 0.6rem; border-radius: 999px; background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.2); color: var(--gold-light); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; }
 
-    /* ── Contact Page ── */
-    .contact-page { max-width: 600px; margin: 0 auto; padding: 4rem 2rem 6rem; }
-    .contact-page h1 { font-family: 'Playfair Display', serif; font-size: 2.2rem; color: var(--gold-light); margin-bottom: 0.5rem; }
-    .contact-page .sub { color: var(--muted); margin-bottom: 3rem; font-size: 0.95rem; }
-    .contact-items { display: flex; flex-direction: column; gap: 1.2rem; }
+    /* ── Profile Page ── */
+    #page-contact { background: rgba(17,24,32,0.58); }
+    .contact-page { max-width: 1120px; margin: 0 auto; padding: 4rem 2rem 7rem; }
+    .profile-hero { display: grid; grid-template-columns: 270px 1fr; align-items: start; gap: 3.5rem; padding: 1rem 0 3.5rem; border-bottom: 1px solid rgba(201,168,76,0.24); }
+    .profile-identity { position: sticky; top: 100px; }
+    .profile-avatar { width: 210px; height: 210px; border-radius: 28px; object-fit: cover; border: 1px solid rgba(201,168,76,0.65); background: var(--surface2); box-shadow: 12px 16px 0 rgba(201,168,76,0.12); }
+    .profile-avatar-fallback { display: grid; place-items: center; font-family: 'Playfair Display', serif; font-size: 4rem; color: var(--gold-light); }
+    .contact-kicker { color: var(--gold); font-size: 0.72rem; font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 1rem; }
+    .contact-page h1 { font-family: 'Playfair Display', serif; font-size: clamp(2.4rem, 5vw, 4.5rem); color: var(--gold-light); line-height: 1.02; margin-bottom: 0.45rem; }
+    .profile-role { color: var(--gold); font-size: 0.95rem; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 1rem; }
+    .contact-page .sub { max-width: 620px; color: #e2dbd0; margin-bottom: 1.6rem; font-size: 1.05rem; line-height: 1.7; white-space: pre-line; }
+    .profile-links { display: flex; flex-wrap: wrap; gap: 0.7rem; min-width: 0; }
+    .profile-link { display: inline-flex; align-items: center; gap: 0.45rem; max-width: 100%; overflow-wrap: anywhere; padding: 0.7rem 0.9rem; border: 1px solid rgba(118,219,192,0.38); border-radius: 10px; color: var(--text); text-decoration: none; background: rgba(118,219,192,0.08); transition: transform 0.2s, background 0.2s; }
+    .profile-link:hover { transform: translateY(-2px); background: rgba(201,168,76,0.18); }
+    .profile-details { display: flex; flex-wrap: wrap; gap: 0.55rem 1.4rem; margin-top: 1.8rem; color: var(--muted); font-size: 0.86rem; }
+    .profile-details strong { color: var(--text); font-weight: 500; }
+    .profile-section { padding: 2.5rem 0 0; }
+    .profile-section h2 { font-family: 'Playfair Display', serif; font-size: 1.55rem; color: var(--gold-light); margin-bottom: 0.75rem; }
+    .profile-section p { max-width: 760px; color: #d6cec2; line-height: 1.75; }
+    .interest-list { display: flex; flex-wrap: wrap; gap: 0.65rem; margin-top: 1.25rem; }
+    .interest { border-left: 2px solid var(--gold); padding: 0.65rem 0.85rem; color: var(--text); background: rgba(255,255,255,0.055); font-size: 0.88rem; }
+    .profile-note { margin-top: 1.5rem; color: var(--gold-light); font-family: 'Playfair Display', serif; font-size: 1.25rem; }
+    .contact-items { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1.5rem; }
     .contact-item {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-      padding: 1.2rem 1.5rem; display: flex; align-items: center; gap: 1rem;
+      background: linear-gradient(145deg, rgba(35,34,32,0.96), rgba(24,23,20,0.96));
+      border: 1px solid rgba(201,168,76,0.2); border-radius: 14px;
+      padding: 1.35rem; display: flex; align-items: flex-start; gap: 1rem; min-height: 112px;
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
     }
-    .contact-item a { color: var(--gold); text-decoration: none; font-size: 1rem; }
-    .contact-item a:hover { color: var(--gold-light); text-decoration: underline; }
-    .contact-item .ci-icon { font-size: 1.5rem; flex-shrink: 0; }
-    .contact-item .ci-label { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.2rem; }
+    .contact-item:hover { transform: translateY(-3px); border-color: rgba(201,168,76,0.55); background: linear-gradient(145deg, rgba(42,40,34,0.98), rgba(26,25,22,0.98)); }
+    .contact-item a { color: var(--gold-light); text-decoration: none; font-size: 1rem; line-height: 1.5; overflow-wrap: anywhere; }
+    .contact-item a:hover { color: #fff4d2; text-decoration: underline; text-underline-offset: 3px; }
+    .contact-item .ci-icon { width: 42px; height: 42px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; background: rgba(201,168,76,0.12); border: 1px solid rgba(201,168,76,0.25); font-size: 1.35rem; flex-shrink: 0; }
+    .contact-item .ci-label { font-size: 0.7rem; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: #bcb3a6; margin: 0.15rem 0 0.35rem; }
     .contact-item .ci-value { color: var(--text); font-size: 0.95rem; }
-    .contact-empty { text-align: center; padding: 4rem 2rem; color: var(--muted); }
+    .contact-empty { text-align: center; padding: 4rem 2rem; color: #d6cec2; border: 1px dashed rgba(201,168,76,0.3); border-radius: 14px; grid-column: 1 / -1; }
     .contact-empty span { font-size: 3rem; display: block; margin-bottom: 1rem; }
-    .custom-html { margin-top: 2rem; color: var(--text); line-height: 1.7; }
-    .custom-html a { color: var(--gold); }
+    .custom-html { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); color: #d6cec2; line-height: 1.8; }
+    .custom-html a { color: var(--gold-light); }
+    .card { box-shadow: 0 10px 24px rgba(35,67,62,0.06); }
+    .card:hover { border-color: var(--gold); box-shadow: 0 15px 30px rgba(54,127,118,0.11); }
+    .card-badge { color: #f4fffb; background: rgba(18,42,42,0.86); }
+    .card-badge.gold { color: #bff8e9; }
+    .card { background: #202d38; border-color: #34434f; }
+    .card:hover { background: #293946; }
+    .profile-hero { background: transparent; box-shadow: none; }
+    .profile-link { background: rgba(189,141,47,0.07); border-color: rgba(189,141,47,0.42); }
+    .profile-link:hover { background: rgba(189,141,47,0.14); }
+    .profile-section p, .contact-page .sub, .custom-html { color: #b3bdc3; }
+    .contact-item { background: linear-gradient(145deg, #1f2b35, #18232c); box-shadow: 0 10px 24px rgba(0,0,0,0.16); }
+    .contact-item:hover { background: #263440; }
+    .contact-item .ci-label { color: #aab6bd; }
+    .interest { background: rgba(38,52,64,0.78); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+    .resume-section { margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid var(--border); }
+    .resume-section h2 { font-family: 'Playfair Display', serif; color: var(--gold-light); font-size: 1.45rem; margin-bottom: 0.55rem; }
+    .resume-section p { color: #b3bdc3; line-height: 1.65; margin-bottom: 1rem; }
+    .resume-button { display: inline-flex; color: var(--gold-light); border: 1px solid rgba(213,163,90,0.5); border-radius: 10px; padding: 0.7rem 0.95rem; text-decoration: none; transition: transform 0.2s, background 0.2s; }
+    .resume-button:hover { transform: translateY(-2px); background: rgba(213,163,90,0.12); }
+    #page-contact .contact-items { display: none; }
+    body.contact-view #siteFooter { display: none; }
+    @media (max-width: 720px) { .profile-hero { grid-template-columns: 1fr; gap: 2rem; padding-top: 0; } .profile-identity { position: static; } .profile-avatar { width: 150px; height: 150px; } .profile-links { justify-content: flex-start; } }
+    @media (max-width: 420px) { .profile-link { width: 100%; justify-content: center; } .profile-details { flex-direction: column; gap: 0.45rem; } }
 
     /* ── Footer ── */
     footer { border-top: 1px solid var(--border); text-align: center; padding: 2rem; color: var(--muted); font-size: 0.8rem; }
@@ -393,7 +431,9 @@
       .modal-price { font-size: 1.1rem; }
       .contact-page { padding: 1.8rem 0.85rem 3rem; }
       .contact-page h1 { font-size: 1.6rem; }
-      .contact-item { padding: 1rem; }
+      .contact-page .sub { font-size: 0.95rem; margin-bottom: 2rem; }
+      .contact-items { grid-template-columns: 1fr; }
+      .contact-item { padding: 1rem; min-height: 96px; }
       footer { padding: 1.2rem 0.85rem; }
     }
   </style>
@@ -407,10 +447,10 @@
   <div class="header-controls">
     <button class="mobile-menu-toggle" id="mobileMenuToggle" onclick="toggleMobileNav()" aria-expanded="false" aria-controls="mainNav">Menu</button>
     <nav id="mainNav">
+      <button class="nav-btn" id="nav-contact" onclick="handleNavClick('contact')">Contact</button>
       <button class="nav-btn active" id="nav-pod" onclick="handleNavClick('pod')">Print on Demand</button>
       <button class="nav-btn" id="nav-limited" onclick="handleNavClick('limited')">Limited Time</button>
       <button class="nav-btn" id="nav-etsy" onclick="handleNavClick('etsy')">Etsy</button>
-      <button class="nav-btn" id="nav-contact" onclick="handleNavClick('contact')">Contact</button>
       <button class="nav-btn" id="nav-success" onclick="handleNavClick('success')" style="display:none;">Thank You</button>
       <a href="/admin">Admin</a>
     </nav>
@@ -432,7 +472,6 @@
         <div class="section-title">Main collection</div>
         <div class="section-subtitle">Featured products available now.</div>
       </div>
-      <div class="section-chip">POD</div>
     </div>
     <div class="section-grid" id="podGrid">
       <div class="empty"><span>🛍️</span>Loading...</div>
@@ -483,8 +522,26 @@
 <!-- ── Contact Page ── -->
 <div class="page" id="page-contact">
   <div class="contact-page">
-    <h1>Get in Touch</h1>
-    <p class="sub" id="contactSub">I'd love to hear from you.</p>
+    <div class="profile-hero">
+      <div class="profile-identity" id="profileAvatarWrap"></div>
+      <div>
+        <h1 id="contactName">Your Name</h1>
+        <div class="profile-role" id="contactRole"></div>
+        <p class="sub" id="contactSub">Welcome to my corner of the internet.</p>
+        <div id="profileLinks" class="profile-links"></div>
+        <div class="profile-details"><span><strong>Graduating</strong> 2027</span><span><strong>School</strong> Grant High School</span></div>
+      </div>
+    </div>
+    <section class="profile-section">
+      <div class="contact-kicker">About the work</div>
+      <h2>Always learning, always building.</h2>
+      <p>I am a hands-on learner who likes turning an idea into something I can build, test, and improve. My projects range from a self-hosted homelab with a NAS and Minecraft server to 3D prototypes, PCB designs, robotics, laser-cut parts, and web projects.</p>
+    </section>
+    <section class="profile-section">
+      <div class="contact-kicker">Current interests</div>
+      <div id="profileInterests" class="interest-list"></div>
+    </section>
+    <section class="resume-section" id="profileResume" hidden></section>
     <div id="contactItems" class="contact-items"></div>
     <div id="customHtml" class="custom-html"></div>
   </div>
@@ -962,34 +1019,8 @@ function applyWallpaper() {
   // Remove existing overlays
   if (existingWallpaper) existingWallpaper.remove();
   if (existingFrosted) existingFrosted.remove();
-
-  // Apply wallpaper if set
-  if (storeSettings.wallpaperUrl) {
-    // Set background with wallpaper
-    body.style.background = `url('${storeSettings.wallpaperUrl}') center/cover fixed no-repeat`;
-    body.style.backgroundColor = 'transparent'; // Remove default background color
-
-    // Add frosted overlay if enabled
-    if (storeSettings.frostedOverlay && !isLowPowerMode) {
-      const frosted = document.createElement('div');
-      frosted.id = 'frosted-overlay';
-      frosted.style.position = 'fixed';
-      frosted.style.top = '0';
-      frosted.style.left = '0';
-      frosted.style.width = '100%';
-      frosted.style.height = '100%';
-      frosted.style.backdropFilter = 'blur(8px)';
-      frosted.style.webkitBackdropFilter = 'blur(8px)'; // Safari support
-      frosted.style.backgroundColor = 'rgba(15, 14, 12, 0.7)';
-      frosted.style.zIndex = '-1';
-      frosted.style.pointerEvents = 'none';
-      body.appendChild(frosted);
-    }
-  } else {
-    // Reset to default background
-    body.style.background = '';
-    body.style.backgroundColor = '';
-  }
+  body.style.background = '';
+  body.style.backgroundColor = '';
 }
 
 async function init() {
@@ -1161,6 +1192,7 @@ function showPage(name) {
   document.getElementById('page-' + name).classList.add('active');
   const btn = document.getElementById('nav-' + name);
   if (btn) btn.classList.add('active');
+  document.body.classList.toggle('contact-view', name === 'contact');
   window.scrollTo({ top: 0, behavior: isLowPowerMode ? 'auto' : 'smooth' });
 }
 
@@ -1346,6 +1378,30 @@ function renderEtsyCard(p) {
 function renderContact() {
   const c    = contact;
   const list = document.getElementById('contactItems');
+  const customHtml = document.getElementById('customHtml');
+  document.getElementById('contactName').textContent = c.name || 'Your Name';
+  document.getElementById('contactRole').textContent = c.role || '';
+  document.getElementById('contactSub').textContent = c.bio || 'Welcome to my corner of the internet.';
+  const avatarWrap = document.getElementById('profileAvatarWrap');
+  avatarWrap.innerHTML = c.avatar
+    ? `<img class="profile-avatar" src="${esc(c.avatar)}" alt="${esc(c.name || 'Profile photo')}"/>`
+    : `<div class="profile-avatar profile-avatar-fallback">${esc((c.name || 'Y').slice(0, 1).toUpperCase())}</div>`;
+  const emailLink = c.email ? `<a class="profile-link" href="mailto:${esc(c.email)}">✉ OdinAndMilo@Proton.Me</a>` : '';
+  const phoneLink = c.phone ? `<a class="profile-link" href="tel:${esc(c.phone)}">☎ ${esc(c.phone)}</a>` : '';
+  document.getElementById('profileLinks').innerHTML = emailLink + phoneLink + (Array.isArray(c.links) ? c.links : []).map(link => {
+    const url = getSafeExternalUrl(link.url, null);
+    return url ? `<a class="profile-link" href="${esc(url)}" target="_blank" rel="noopener noreferrer">↗ ${esc(link.label)}</a>` : '';
+  }).join('');
+  document.getElementById('profileInterests').innerHTML = (Array.isArray(c.interests) ? c.interests : []).map(interest => `<span class="interest">${esc(interest)}</span>`).join('');
+  const resume = c.resume && c.resume.enabled && getSafeExternalUrl(c.resume.url, null) ? c.resume : null;
+  const resumeSection = document.getElementById('profileResume');
+  if (resume) {
+    resumeSection.hidden = false;
+    resumeSection.innerHTML = `<h2>${esc(resume.title || 'Resume')}</h2>${resume.summary ? `<p>${esc(resume.summary)}</p>` : ''}<a class="resume-button" href="${esc(getSafeExternalUrl(resume.url, null))}" target="_blank" rel="noopener noreferrer">View resume</a>`;
+  } else {
+    resumeSection.hidden = true;
+    resumeSection.innerHTML = '';
+  }
   const items = [];
 
   if (c.email)     items.push({ icon:'📧', label:'Email',     html:`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>` });
@@ -1358,9 +1414,18 @@ function renderContact() {
     const shop = c.etsy.replace(/^https?:\/\/(www\.)?etsy\.com\/shop\//, '').replace(/\/$/, '');
     items.push({ icon:'🛍️', label:'Etsy Shop', html:`<a href="https://etsy.com/shop/${shop}" target="_blank" rel="noopener">${esc(shop)}</a>` });
   }
+  if (c.youtube) {
+    const youtubeUrl = getSafeExternalUrl(c.youtube, 'youtube.com');
+    if (youtubeUrl) items.push({ icon:'▶️', label:'YouTube', html:`<a href="${esc(youtubeUrl)}" target="_blank" rel="noopener noreferrer">${esc(youtubeUrl)}</a>` });
+  }
+  if (c.github) {
+    const githubUrl = getSafeExternalUrl(c.github, 'github.com');
+    if (githubUrl) items.push({ icon:'🐙', label:'GitHub', html:`<a href="${esc(githubUrl)}" target="_blank" rel="noopener noreferrer">${esc(githubUrl)}</a>` });
+  }
 
   if (!items.length && !c.custom) {
     list.innerHTML = `<div class="contact-empty"><span>📭</span>Contact info coming soon.</div>`;
+    customHtml.innerHTML = '';
     return;
   }
 
@@ -1375,7 +1440,20 @@ function renderContact() {
   `).join('');
 
   if (c.custom) {
-    document.getElementById('customHtml').innerHTML = `<div>${c.custom}</div>`;
+    customHtml.innerHTML = `<div>${c.custom}</div>`;
+  } else {
+    customHtml.innerHTML = '';
+  }
+}
+
+function getSafeExternalUrl(value, allowedHost) {
+  try {
+    const url = new URL(String(value).trim());
+    const hostname = url.hostname.toLowerCase();
+    if (url.protocol !== 'https:' || (allowedHost && hostname !== allowedHost && !hostname.endsWith(`.${allowedHost}`))) return '';
+    return url.href;
+  } catch {
+    return '';
   }
 }
 

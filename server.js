@@ -45,6 +45,7 @@ const API_CACHE_STALE_SECONDS = Math.max(0, parseInt(process.env.API_CACHE_STALE
 const SERVER_KEEP_ALIVE_TIMEOUT_MS = Math.max(1000, parseInt(process.env.SERVER_KEEP_ALIVE_TIMEOUT_MS || '65000', 10));
 const SERVER_HEADERS_TIMEOUT_MS = Math.max(SERVER_KEEP_ALIVE_TIMEOUT_MS + 1000, parseInt(process.env.SERVER_HEADERS_TIMEOUT_MS || '70000', 10));
 const SERVER_REQUEST_TIMEOUT_MS = Math.max(0, parseInt(process.env.SERVER_REQUEST_TIMEOUT_MS || '120000', 10));
+const TAILSCALE_STATUS_CACHE_MS = 10000;
 
 // ─── Payment Configuration ────────────────────────────────────────────────────
 const ENABLE_CARD_PAYMENTS  = process.env.ENABLE_CARD_PAYMENTS !== 'false';
@@ -62,6 +63,39 @@ const squareClient = new Client({
   token: SQUARE_ACCESS_TOKEN,
   environment: SQUARE_ENVIRONMENT,
 });
+
+let tailscaleStatusCache = { checkedAt: 0, available: false, funnelActive: false, detail: 'Not checked yet' };
+
+function getTailscaleFunnelStatus() {
+  const now = Date.now();
+  if (now - tailscaleStatusCache.checkedAt < TAILSCALE_STATUS_CACHE_MS) return tailscaleStatusCache;
+
+  try {
+    const output = execSync('tailscale funnel status --json', {
+      encoding: 'utf8',
+      timeout: 1500,
+      windowsHide: true,
+      stdio: ['ignore', 'pipe', 'pipe']
+    });
+    const parsed = JSON.parse(output);
+    const text = JSON.stringify(parsed);
+    const funnelActive = /funnel\s*on|allowfunnel[^a-z]+true|funnel[^a-z]+true/i.test(text);
+    tailscaleStatusCache = {
+      checkedAt: now,
+      available: true,
+      funnelActive,
+      detail: funnelActive ? 'Tailscale Funnel is enabled' : 'Tailscale Funnel is not enabled'
+    };
+  } catch (err) {
+    tailscaleStatusCache = {
+      checkedAt: now,
+      available: false,
+      funnelActive: false,
+      detail: 'Unable to query the Tailscale Funnel status'
+    };
+  }
+  return tailscaleStatusCache;
+}
 
 function verifySquareWebhookSignature(req) {
   const signatureHeader = req.headers['x-square-signature'] || req.headers['x-square-hmacsha256-signature'];
@@ -884,6 +918,18 @@ app.use('/uploads', (req, res, next) => {
   next();
 }, express.static(UPLOAD_DIR));
 
+// Never expose the admin document through the public static-file middleware.
+// The /admin route below is the only entry point and is session-protected.
+app.get('/admin.html', (req, res) => res.redirect('/admin'));
+
+// Storefront sections are separate navigable pages while sharing the existing
+// storefront document, styles, and client-side product/checkout behavior.
+const storefrontPage = (req, res) => {
+  recordAnalyticsVisit(req, { pageName: req.path });
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+};
+app.get(['/store', '/contact', '/limited', '/etsy'], storefrontPage);
+
 // Cache static assets for 1 hour
 app.use(express.static(path.join(__dirname, 'public'), {
   setHeaders: (res, filePath) => {
@@ -940,6 +986,29 @@ function requireAdminAction(req, res, next) {
   }
   next();
 }
+
+app.get('/api/admin/network-status', requireLogin, (req, res) => {
+  const tailscale = getTailscaleFunnelStatus();
+  const forwardedProto = String(req.get('x-forwarded-proto') || '').split(',')[0].trim().toLowerCase();
+  const secureRequest = req.secure === true && (!TRUST_PROXY || forwardedProto === 'https');
+  const funnelVerified = tailscale.available && tailscale.funnelActive && secureRequest;
+
+  res.json({
+    ok: funnelVerified,
+    secureRequest,
+    forwardedProto: forwardedProto || null,
+    trustProxy: TRUST_PROXY,
+    tailscaleAvailable: tailscale.available,
+    funnelActive: tailscale.funnelActive,
+    message: funnelVerified
+      ? 'Tailscale Funnel is active and this admin connection arrived over HTTPS.'
+      : (!tailscale.available
+        ? `${tailscale.detail}. Check that Tailscale is installed and Funnel is running.`
+        : (!tailscale.funnelActive
+          ? 'Tailscale Funnel is not enabled. This site may only be reachable locally or over LAN.'
+          : 'Tailscale Funnel is enabled, but this admin connection did not arrive over HTTPS.'))
+  });
+});
 
 // ─── Email utility ────────────────────────────────────────────────────────────
 // ─── Store Config Endpoint ────────────────────────────────────────────────────
@@ -1354,15 +1423,15 @@ function parseUserAgent(ua) {
   return { browser, os, deviceType };
 }
 
-// Record a product view (called by storefront)
-app.post('/api/analytics/view/:id', (req, res) => {
-  const { id } = req.params;
+function recordAnalyticsVisit(req, { productId = null, pageName = null } = {}) {
   const analytics = loadAnalytics();
-  if (!analytics.products[id]) {
-    analytics.products[id] = { views: 0, firstSeen: new Date().toISOString(), lastSeen: null };
+  if (productId) {
+    if (!analytics.products[productId]) {
+      analytics.products[productId] = { views: 0, firstSeen: new Date().toISOString(), lastSeen: null };
+    }
+    analytics.products[productId].views++;
+    analytics.products[productId].lastSeen = new Date().toISOString();
   }
-  analytics.products[id].views++;
-  analytics.products[id].lastSeen = new Date().toISOString();
   analytics.totalViews = (analytics.totalViews || 0) + 1;
 
   const ip = req.clientIp;
@@ -1374,8 +1443,9 @@ app.post('/api/analytics/view/:id', (req, res) => {
   const logEntry = {
     timestamp: new Date().toISOString(),
     ip: ip || 'unknown',
-    productId: id,
-    page: req.headers['referer'] || '/',
+    productId,
+    pageName,
+    page: req.headers['referer'] || req.path || '/',
     deviceType,
     os,
     browser,
@@ -1386,6 +1456,11 @@ app.post('/api/analytics/view/:id', (req, res) => {
   if (analytics.visitorLog.length > 500) analytics.visitorLog.length = 500; // cap at 500 entries
 
   saveAnalytics(analytics);
+}
+
+// Record a product view (called by storefront)
+app.post('/api/analytics/view/:id', (req, res) => {
+  recordAnalyticsVisit(req, { productId: req.params.id });
   res.json({ success: true });
 });
 
@@ -1408,7 +1483,7 @@ app.get('/api/analytics', requireLogin, (req, res) => {
   // Attach product names to visitor log entries
   const visitorLog = (analytics.visitorLog || []).map(entry => {
     const product = products.find(p => p.id === entry.productId);
-    return { ...entry, productName: product ? product.name : '(deleted product)' };
+    return { ...entry, productName: product ? product.name : null };
   });
 
   const totalViews = analytics.totalViews || 0;

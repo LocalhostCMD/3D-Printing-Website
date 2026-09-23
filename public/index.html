@@ -443,14 +443,14 @@
 
 
 <header>
-  <div class="logo" onclick="showPage('pod')">✦ <span id="headerStoreName">Miles To Print</span></div>
+  <a class="logo" href="/store">✦ <span id="headerStoreName">Miles To Print</span></a>
   <div class="header-controls">
     <button class="mobile-menu-toggle" id="mobileMenuToggle" onclick="toggleMobileNav()" aria-expanded="false" aria-controls="mainNav">Menu</button>
     <nav id="mainNav">
-      <button class="nav-btn" id="nav-contact" onclick="handleNavClick('contact')">Contact</button>
-      <button class="nav-btn active" id="nav-pod" onclick="handleNavClick('pod')">Print on Demand</button>
-      <button class="nav-btn" id="nav-limited" onclick="handleNavClick('limited')">Limited Time</button>
-      <button class="nav-btn" id="nav-etsy" onclick="handleNavClick('etsy')">Etsy</button>
+      <a class="nav-btn" id="nav-contact" href="/contact">Contact</a>
+      <a class="nav-btn active" id="nav-pod" href="/store">Print on Demand</a>
+      <a class="nav-btn" id="nav-limited" href="/limited">Limited Time</a>
+      <a class="nav-btn" id="nav-etsy" href="/etsy">Etsy</a>
       <button class="nav-btn" id="nav-success" onclick="handleNavClick('success')" style="display:none;">Thank You</button>
       <a href="/admin">Admin</a>
     </nav>
@@ -565,7 +565,7 @@
         Contact support if you need help with your order.
       </p>
     </div>
-    <button class="btn-add-cart" style="margin-top:1.5rem;" onclick="showPage('pod')">Continue Shopping</button>
+    <a class="btn-add-cart" style="margin-top:1.5rem; display:block; text-align:center; text-decoration:none;" href="/store">Continue Shopping</a>
   </div>
 </div>
 
@@ -1026,6 +1026,8 @@ function applyWallpaper() {
 async function init() {
   applyDevicePerformanceMode();
   wireConnectionListeners();
+  const initialPage = ({ '/contact': 'contact', '/limited': 'limited', '/etsy': 'etsy' })[window.location.pathname] || 'pod';
+  showPage(initialPage);
 
   try {
     const [cfg, loadedProducts, loadedContact, rawMaterials, legacyColorsRaw, loadedFilaments] = await Promise.all([

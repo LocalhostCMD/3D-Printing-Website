@@ -29,6 +29,10 @@
     }
     .logo { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--gold); }
     .header-right { display: flex; gap: 1rem; align-items: center; }
+    .network-alert { max-width: 1140px; margin: 1rem auto 0; padding: 0.85rem 1rem; border: 1px solid #d8954f; border-radius: 10px; background: rgba(216,149,79,0.12); color: #ffd9a8; font-size: 0.88rem; }
+    .network-alert strong { color: #ffe8c8; }
+    .network-alert.ok { border-color: #5dbb91; background: rgba(93,187,145,0.1); color: #b9f0d4; }
+    .network-alert.ok strong { color: #dcffeb; }
     .btn-sm {
       padding: 0.45rem 1rem; border-radius: 7px; font-size: 0.82rem;
       font-family: 'DM Sans', sans-serif; cursor: pointer; text-decoration: none;
@@ -570,6 +574,10 @@
     <a class="btn-sm" href="/admin/logout">Sign Out</a>
   </div>
 </header>
+
+<div id="networkAlert" class="network-alert" role="status" aria-live="polite">
+  <strong>Checking Tailscale Funnel...</strong>
+</div>
 
 <!-- ── Tab Nav ── -->
 <nav class="tab-nav">
@@ -2236,7 +2244,7 @@ function renderVisitorLog() {
           <th>Device</th>
           <th>OS</th>
           <th>Browser</th>
-          <th>Product Viewed</th>
+          <th>Page / Product</th>
         </tr>
       </thead>
       <tbody>
@@ -2254,7 +2262,7 @@ function renderVisitorLog() {
             <td>${esc(e.deviceType || '—')}</td>
             <td class="vl-muted">${esc(e.os || '—')}</td>
             <td class="vl-muted">${esc(e.browser || '—')}</td>
-            <td>${esc(e.productName || e.productId || '—')}</td>
+            <td>${esc(e.productName || e.pageName || e.productId || e.page || '—')}</td>
           </tr>`;
         }).join('')}
       </tbody>
@@ -2437,6 +2445,20 @@ function showToast(msg, duration = 3000) {
   t.classList.add('show');
   clearTimeout(t._timer);
   t._timer = setTimeout(() => t.classList.remove('show'), duration);
+}
+
+async function checkNetworkStatus() {
+  const alert = document.getElementById('networkAlert');
+  if (!alert) return;
+  try {
+    const res = await adminFetch('/api/admin/network-status');
+    const status = await res.json();
+    alert.classList.toggle('ok', status.ok === true);
+    alert.innerHTML = `<strong>${status.ok ? 'Tailscale Funnel active' : 'Tailscale Funnel warning'}</strong> ${esc(status.message || 'Network status unavailable')}`;
+  } catch (err) {
+    alert.classList.remove('ok');
+    alert.innerHTML = '<strong>Tailscale Funnel warning</strong> Could not check the Funnel status.';
+  }
 }
 
 // ── Escape HTML ───────────────────────────────────────────────────
@@ -2811,6 +2833,8 @@ function dataUrlToBlob(dataUrl) {
 // ── Init ──────────────────────────────────────────────────────────
 loadMaterials();
 loadProducts();
+checkNetworkStatus();
+setInterval(checkNetworkStatus, 15000);
 </script>
 </body>
 </html>
